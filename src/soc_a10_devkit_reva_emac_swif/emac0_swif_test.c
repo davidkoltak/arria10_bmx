@@ -131,15 +131,78 @@ void emac0_swif_init(int step)
 // Terminal Commands
 //
 
+#define TEST_SZ 50
+
 int emac0_swif_test(int argc, char** argv)
 {
-  int *tx_buf = (int*) 0xFF200000;
-  int *tx_ctl = (int*) 0xFF200004;
-  int *tx_sts = (int*) 0xFF200010;
-  int *rx_buf = (int*) 0xFF200020;
-  int *rx_ctl = (int*) 0xFF200024;
-  int *rx_sts = (int*) 0xFF200030;
+  volatile int *tx_data = (volatile int*) 0xFF200000;
+  volatile int *tx_ctl = (volatile int*) 0xFF200004;
+  volatile int *tx_sts = (volatile int*) 0xFF200010;
+  volatile int *rx_data = (volatile int*) 0xFF200020;
+  volatile int *rx_ctl = (volatile int*) 0xFF200024;
+  volatile int *rx_sts = (volatile int*) 0xFF200030;
+  int tx_buf[TEST_SZ];
+  int rx_buf[TEST_SZ];
+  int x;
   
+  //
+  // Initialize buffers
+  //
+  
+  for (x = 0; x < TEST_SZ; x++)
+  {
+    tx_buf[x] = (x * 3);
+    rx_buf[x] = 0xFFFFFBAD;
+  }
+  
+  //
+  // Send data
+  //
+  
+  *tx_ctl = (1 << 0);
+  *tx_data = tx_buf[0];
+  *tx_ctl = 0;
+  
+  for (x = 1; x < (TEST_SZ-1); x++)
+    *tx_data = tx_buf[x];
+    
+  *tx_ctl = (1 << 1);
+  *tx_data = tx_buf[x];
+  *tx_ctl = 0;
+  
+  //
+  // Receive data
+  //
+  
+  x = 0;
+  while ((*rx_ctl & 1) == 0)
+    __asm("nop;\nnop;\nnop;\n");
+  rx_buf[x++] = *rx_data;
+  
+  while ((*rx_ctl & 3) == 0)
+  {
+    rx_buf[x++] = *rx_data;
+    
+    if (x == (TEST_SZ-1))
+    {
+      puts("ERROR: Received too many words");
+      break;
+    }
+  }
+  
+  if (*rx_ctl & 1)
+    puts("ERROR: Packet ended with 'start-of-frame'");
+  
+  rx_buf[x++] = *rx_data;
+  
+  //
+  // Check data
+  //
+  
+  for (x = 0; x < TEST_SZ; x++)
+    if (tx_buf[x] != rx_buf[x])
+      printf("MISMATCH: Sent 0x%08X, Received 0x%08X, Offset 0x%08X\n", tx_buf[x], rx_buf[x], x);
+
   return 0;
 }
 
