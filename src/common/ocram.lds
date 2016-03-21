@@ -47,8 +47,10 @@ SECTIONS
   .text : 
   {
     . = ALIGN(4);
-    *(.startup); *(.text);
+    *(.startup);
+    *(.text);
     *(.text.startup);
+    *(.text.unlikely);
     . = ALIGN(4);
   }
   _text_end = .;

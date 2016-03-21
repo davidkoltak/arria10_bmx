@@ -85,12 +85,13 @@ ${BOARD}.pimage: ${BOARD}.bin
 	mkpimage -hv 1 -a 256 -o ${BOARD}.pimage ${BOARD}.bin ${BOARD}.bin ${BOARD}.bin ${BOARD}.bin
 
 ${BOARD}.sdcard: ${BOARD}.pimage
+ifeq ($(strip ${DFILES}),)
+	@echo " *** NO Data Files (*.dat|*.rbf) in src/${BOARD}/ directory ***"
 	@cp ${BOARD}.pimage ${BOARD}.sdcard
-ifeq (${DFILES},)
-	@echo " *** NO Data Files (*.dat) in src/${BOARD}/ directory ***"
 	@echo "> (empty)" | dd bs=${BLKSZ} conv=sync >> ${BOARD}.sdcard
 else
 	@cd src/${BOARD}/ && stat --printf="> %n [%s]\n" $(notdir ${DFILES}) > dfiles.hdr
+	@cp ${BOARD}.pimage ${BOARD}.sdcard
 	@echo "dfiles.hdr" && dd if=src/${BOARD}/dfiles.hdr bs=${BLKSZ} conv=sync >> ${BOARD}.sdcard
 	@for data_file in ${DFILES} ; do echo $$data_file && dd if=$$data_file bs=${BLKSZ} conv=sync >> ${BOARD}.sdcard ; done
 endif
