@@ -151,7 +151,7 @@ int emac0_swif_test(int argc, char** argv)
   
   for (x = 0; x < TEST_SZ; x++)
   {
-    tx_buf[x] = (x * 3);
+    tx_buf[x] = (x < 3) ? 0xFFFFFFFF : (x * 3);
     rx_buf[x] = 0xFFFFFBAD;
   }
   
@@ -159,13 +159,14 @@ int emac0_swif_test(int argc, char** argv)
   // Send data
   //
   
+  puts("INFO: Sending packet");
   *tx_ctl = (1 << 0);
   *tx_data = tx_buf[0];
   *tx_ctl = 0;
   
   for (x = 1; x < (TEST_SZ-1); x++)
     *tx_data = tx_buf[x];
-    
+   
   *tx_ctl = (1 << 1);
   *tx_data = tx_buf[x];
   *tx_ctl = 0;
@@ -175,10 +176,12 @@ int emac0_swif_test(int argc, char** argv)
   //
   
   x = 0;
+  puts("INFO: Waiting for first receive word");
   while ((*rx_ctl & 1) == 0)
     __asm("nop;\nnop;\nnop;\n");
   rx_buf[x++] = *rx_data;
   
+  puts("INFO: Receiving packet");
   while ((*rx_ctl & 3) == 0)
   {
     rx_buf[x++] = *rx_data;
@@ -189,20 +192,23 @@ int emac0_swif_test(int argc, char** argv)
       break;
     }
   }
-  
+
   if (*rx_ctl & 1)
     puts("ERROR: Packet ended with 'start-of-frame'");
   
+  puts("INFO: Receiving last word");
   rx_buf[x++] = *rx_data;
   
   //
   // Check data
   //
   
+  puts("INFO: Checking results");
   for (x = 0; x < TEST_SZ; x++)
     if (tx_buf[x] != rx_buf[x])
       printf("MISMATCH: Sent 0x%08X, Received 0x%08X, Offset 0x%08X\n", tx_buf[x], rx_buf[x], x);
-
+  
+  puts(" *** TEST COMPLETE ***");
   return 0;
 }
 
