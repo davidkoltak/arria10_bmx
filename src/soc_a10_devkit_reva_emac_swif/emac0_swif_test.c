@@ -112,8 +112,8 @@ void emac0_swif_init(int step)
   *brgmodrst &= ~(1 << 1);
   *per0modrst &= ~(1 << 0);
   
-  *sysmgr_emac0 &= ~((3 << 0) | (1 << 12));
-  *sysmgr_emac0 |= ((1 << 0) | (1 << 12));
+  *sysmgr_emac0 &= ~((1 << 12) | (3 << 0));
+  *sysmgr_emac0 |= ((1 << 31) | (0 << 12) | (1 << 0));
   
   *sysmgr_fpgaintf_en_3 |= (1 << 4) | (1 << 0);
   
@@ -122,7 +122,9 @@ void emac0_swif_init(int step)
 
   emac0->mac_address[0].high = 0x80003456;
   emac0->mac_address[0].low = 0x7654321;
+  emac0->mac_frame_filter = (1 << 31) | (1 << 0);
   emac0->mac_config = 0x0000090C;
+  emac0->mac_config |= (1 << 12); // MAC Loopback
       
   return;
 }
@@ -131,84 +133,72 @@ void emac0_swif_init(int step)
 // Terminal Commands
 //
 
+// Max TEST_SZ of 1022 (32-bit words)
 #define TEST_SZ 50
 
 int emac0_swif_test(int argc, char** argv)
 {
-  volatile int *tx_data = (volatile int*) 0xFF200000;
-  volatile int *tx_ctl = (volatile int*) 0xFF200004;
-  volatile int *tx_sts = (volatile int*) 0xFF200010;
-  volatile int *rx_data = (volatile int*) 0xFF200020;
-  volatile int *rx_ctl = (volatile int*) 0xFF200024;
-  volatile int *rx_sts = (volatile int*) 0xFF200030;
-  int tx_buf[TEST_SZ];
-  int rx_buf[TEST_SZ];
+  volatile int *tx_ctl = (volatile int*) 0xFF200000;
+  volatile int *tx_sts = (volatile int*) 0xFF200004;
+  volatile int *tx_dat = (volatile int*) 0xFF200008;
+  volatile int *rx_ctl = (volatile int*) 0xFF201000;
+  volatile int *rx_sts = (volatile int*) 0xFF201004;
+  volatile int *rx_dat = (volatile int*) 0xFF201008;
+  int test_num;
+  int tmp;
   int x;
   
-  //
-  // Initialize buffers
-  //
-  
-  for (x = 0; x < TEST_SZ; x++)
+  for (test_num = 1; test_num < 3; test_num++)
   {
-    tx_buf[x] = (x < 3) ? 0xFFFFFFFF : (x * 3);
-    rx_buf[x] = 0xFFFFFBAD;
-  }
-  
-  //
-  // Send data
-  //
-  
-  puts("INFO: Sending packet");
-  *tx_ctl = (1 << 0);
-  *tx_data = tx_buf[0];
-  *tx_ctl = 0;
-  
-  for (x = 1; x < (TEST_SZ-1); x++)
-    *tx_data = tx_buf[x];
-   
-  *tx_ctl = (1 << 1);
-  *tx_data = tx_buf[x];
-  *tx_ctl = 0;
-  
-  //
-  // Receive data
-  //
-  
-  x = 0;
-  puts("INFO: Waiting for first receive word");
-  while ((*rx_ctl & 1) == 0)
-    __asm("nop;\nnop;\nnop;\n");
-  rx_buf[x++] = *rx_data;
-  
-  puts("INFO: Receiving packet");
-  while ((*rx_ctl & 3) == 0)
-  {
-    rx_buf[x++] = *rx_data;
-    
-    if (x == (TEST_SZ-1))
-    {
-      puts("ERROR: Received too many words");
-      break;
-    }
-  }
+    //
+    // Initialize buffers
+    //
 
-  if (*rx_ctl & 1)
-    puts("ERROR: Packet ended with 'start-of-frame'");
+    for (x = 0; x < TEST_SZ; x++)
+      tx_dat[x] = (x < 3) ? 0xFFFFFFFF : (x * 3) | (test_num << 16);
+
+    //
+    // Arm receive data capture
+    //
+
+    *rx_ctl = (1 << 31); // Flush
+    *rx_ctl = 1;
+
+    //
+    // Send data
+    //
+
+    //puts("INFO: Sending packet");
+    *tx_ctl = (0xC << 28) | (3 << 12) | ((TEST_SZ-1) << 2) | (1 << 0);
+
+    while (*tx_ctl & 1) ;
+    *tx_ctl = 0;
+    //puts("INFO: Packet Sent");
+
+    //
+    // Wait for packet receive to finish
+    //
+
+    while (*rx_ctl & 1) ;
+    *rx_ctl = 0;
+    //puts("INFO: Packet Received");
+
+    //
+    // Check data
+    //
+
+    //puts("INFO: Checking results");
+    for (x = 0; x < TEST_SZ; x++)
+    {
+      tmp = (x < 3) ? 0xFFFFFFFF : (x * 3) | (test_num << 16); // NOTE: 'tx_dat' is write-only
+
+      if (tmp != rx_dat[x])
+        printf("MISMATCH: Sent 0x%08X, Received 0x%08X, Offset 0x%08X\n", tmp, rx_dat[x], x);
+    }
+
+    printf(" *** TEST %i COMPLETE ***\n", test_num);
+  }
   
-  puts("INFO: Receiving last word");
-  rx_buf[x++] = *rx_data;
-  
-  //
-  // Check data
-  //
-  
-  puts("INFO: Checking results");
-  for (x = 0; x < TEST_SZ; x++)
-    if (tx_buf[x] != rx_buf[x])
-      printf("MISMATCH: Sent 0x%08X, Received 0x%08X, Offset 0x%08X\n", tx_buf[x], rx_buf[x], x);
-  
-  puts(" *** TEST COMPLETE ***");
   return 0;
 }
 
