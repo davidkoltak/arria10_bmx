@@ -102,20 +102,26 @@ void emac_swif_phy_write(emac_regs_t *emac, int reg, unsigned int data)
 
 void emac0_swif_init(int step)
 {
-  int *brgmodrst = (int*) 0xFFD0502C;
-  int *per0modrst = (int*) 0xFFD05024;
-  int *sysmgr_emac0 = (int*) 0xFFD06044;
-  int *sysmgr_fpgaintf_en_3 = (int*) 0xFFD06070;
+  volatile int *brgmodrst = (volatile int*) 0xFFD0502C;
+  volatile int *per0modrst = (volatile int*) 0xFFD05024;
+  volatile int *sysmgr_emac_global = (volatile int*) 0xFFD06040;
+  volatile int *sysmgr_emac0 = (volatile int*) 0xFFD06044;
+  volatile int *sysmgr_fpgaintf_en_3 = (volatile int*) 0xFFD06070;
+  volatile int *ecc_emac0_rx_ctrl = (volatile int*) 0xFF8C0808;
+  volatile int *ecc_emac0_tx_ctrl = (volatile int*) 0xFF8C0C08;
+  
   
   emac_regs_t *emac0 = (emac_regs_t*) EMAC0_BASE;
   
-  *brgmodrst &= ~(1 << 1);
-  *per0modrst &= ~(1 << 0);
+  *brgmodrst &= ~(1 << 1);  
+  *per0modrst &= ~((1 << 8) | (1 << 0));
+  // *per0modrst &= ~(1 << 0);
   
-  *sysmgr_emac0 &= ~((1 << 12) | (3 << 0));
-  *sysmgr_emac0 |= ((1 << 31) | (0 << 12) | (1 << 0));
-  
+  *sysmgr_emac0 = (1 << 31) | (1 << 12) | (1 << 0);
   *sysmgr_fpgaintf_en_3 |= (1 << 4) | (1 << 0);
+  
+  *ecc_emac0_rx_ctrl = (1 << 16) | (1 << 0);
+  *ecc_emac0_tx_ctrl = (1 << 16) | (1 << 0);
   
   printf("ID1: 0x%08X\n", emac_swif_phy_read(emac0, 2));
   printf("ID2: 0x%08X\n", emac_swif_phy_read(emac0, 3));
@@ -148,7 +154,7 @@ int emac0_swif_test(int argc, char** argv)
   int tmp;
   int x;
   
-  for (test_num = 1; test_num < 3; test_num++)
+  for (test_num = 1; test_num <= 10; test_num++)
   {
     //
     // Initialize buffers

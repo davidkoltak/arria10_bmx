@@ -113,11 +113,6 @@ module emac_swif_avmm_adapter
   reg [1:0] tx_chksum;
   reg [9:0] tx_word;
   reg [31:0] tx_data;
-  
-  reg switch_ati_rdy_d1;
-  
-  always @ (posedge clk)
-    switch_ati_rdy_d1 <= switch_ati_rdy;  // Do I need to do this??
 
   always @ (posedge clk or posedge rst)
     if (rst)
@@ -156,7 +151,7 @@ module emac_swif_avmm_adapter
       tx_word <= tx_word + 10'd1;
       tx_data <= tx_buf[tx_word];
     end
-    else if (tx_active && switch_ati_rdy_d1)
+    else if (tx_active && switch_ati_rdy)
     begin
       tx_active <= !tx_eof;
       tx_send <= !tx_eof;
