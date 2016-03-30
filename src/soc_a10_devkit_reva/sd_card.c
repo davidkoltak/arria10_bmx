@@ -40,10 +40,12 @@ BOOT_STEP(300, sd_card_init, "init sdmmc card");
 int sd_parts(int argc, char** argv);
 int sd_files(int argc, char** argv);
 int sd_dump(int argc, char** argv);
+int sd_load_rbf(int argc, char** argv);
 
 TERMINAL_COMMAND("sd-parts", sd_parts, "Show SD Card Partitons");
 TERMINAL_COMMAND("sd-files", sd_files, "Show SD Card Files appended to PImage in A2 Partition");
 TERMINAL_COMMAND("sd-dump", sd_dump, "{sector} {bytes} <or> {filename}");
+TERMINAL_COMMAND("sd-load-rbf", sd_load_rbf, "{filename}");
 
 //
 // Card Initialization Boot Step
@@ -393,4 +395,80 @@ int sd_dump(int argc, char** argv)
   return 0;
 }
 
+int sd_load_rbf(int argc, char** argv)
+{
+  ALT_STATUS_CODE status;
+  int sector;
+  int bytes;
+  int x;
+  char buf[512];
+  volatile unsigned int *fpgamgr_ctrl_0 = (volatile unsigned int*) 0xFFD03070;
+  volatile unsigned int *fpgamgr_ctrl_1= (volatile unsigned int*) 0xFFD03074;
+  volatile unsigned int *fpgamgr_ctrl_2 = (volatile unsigned int*) 0xFFD03078;
+  volatile unsigned int *fpgamgr_stat = (volatile unsigned int*) 0xFFD03080;
+  
+  if (argc == 2)
+  {
+    if (sd_find_file(argv[1], &sector, &bytes))
+    {
+      printf("ERROR: Did not find file '%s'\n", argv[1]);
+      return -1;
+    }
+  }
+  else
+  {
+    puts("ERROR: Wrong number of arguments");
+    return -2;
+  }
+
+  *fpgamgr_ctrl_0 = 0x00000106;
+  *fpgamgr_ctrl_1 = 0x00000000;
+  *fpgamgr_ctrl_2 = 0x01000001;
+  
+  *fpgamgr_ctrl_0 = 0x00000006;
+  puts("Loading file ...");
+  flush();
+  *fpgamgr_ctrl_0 = 0x00000106;
+  
+  puts("  Initializing");
+  
+  while ((*fpgamgr_stat & 0x000000A0) != 0x00000080) ;
+  
+  puts("  Configuration started");
+  
+  while (bytes > 0)
+  {
+    while ((*fpgamgr_stat & 0x01000000) == 0) ;
+  
+    status = alt_sdmmc_read(&sd_card_info, (char*) 0xFFCFE400, (void*)(sector * 512), 512);
+    sector++;
+    bytes -= 512;
+    
+    if (status != ALT_E_SUCCESS)
+    {
+      puts("ERROR: Unable to read from SD Card");
+      return -4;
+    }
+    
+    if (*fpgamgr_stat & 0x00000020)
+    {
+      puts("ERROR: nStatus asserted during configuration");
+      return -4;
+    }
+  }
+  
+  while (*fpgamgr_stat & 0x00000080) ;
+  
+  puts("  Configuration done");
+  
+  while ((*fpgamgr_stat & 0x00000004) == 0) ;
+  
+  puts("  User Mode asserted");
+  
+  *fpgamgr_ctrl_0 = 0x00000107;
+  
+  printf("%-30s\n", "DONE");
+    
+  return 0;
+}
 
