@@ -150,6 +150,40 @@ void boot_step_pinmux_init(int step)
   
   shared_q3_pinmux[7-1] = 13; // UART1 TX
   shared_q3_pinmux[8-1] = 13; // UART1 RX
+    
+  dedicated_pinmux[4-1] = 8;
+  dedicated_pinmux[5-1] = 8;
+  dedicated_pinmux[6-1] = 8;
+  dedicated_pinmux[7-1] = 8;
+  dedicated_pinmux[8-1] = 8;
+  dedicated_pinmux[9-1] = 8;
+  dedicated_pinmux[10-1] = 10;
+  dedicated_pinmux[11-1] = 10;
+  dedicated_pinmux[12-1] = 8;
+  dedicated_pinmux[13-1] = 8;
+  dedicated_pinmux[14-1] = 8;
+  dedicated_pinmux[15-1] = 8;
+  dedicated_pinmux[16-1] = 13;
+  dedicated_pinmux[17-1] = 13;
+
+  dedicated_pincfg[0] = 0x00000101;
+  dedicated_pincfg[1] = 0x000b080a;
+  dedicated_pincfg[2] = 0x000b080a;
+  dedicated_pincfg[3] = 0x000b080a;
+  dedicated_pincfg[4] = 0x000a282a;
+  dedicated_pincfg[5] = 0x000a282a;
+  dedicated_pincfg[6] = 0x0008282a;
+  dedicated_pincfg[7] = 0x000a282a;
+  dedicated_pincfg[8] = 0x000a282a;
+  dedicated_pincfg[9] = 0x000a282a;
+  dedicated_pincfg[10] = 0x00090000;
+  dedicated_pincfg[11] = 0x00090000;
+  dedicated_pincfg[12] = 0x000b282a;
+  dedicated_pincfg[13] = 0x000b282a;
+  dedicated_pincfg[14] = 0x000b282a;
+  dedicated_pincfg[15] = 0x000b282a;
+  dedicated_pincfg[16] = 0x0008282a;
+  dedicated_pincfg[17] = 0x000a282a;
   
   return;
 }

@@ -47,7 +47,7 @@ HWLIBS_SRC += $(wildcard ${SOCEDS_DEST_ROOT}/ip/altera/hps/altera_hps/hwlib/src/
 CFLAGS  = -I ${PWD}/src/include/
 CFLAGS += -I ${SOCEDS_DEST_ROOT}/ip/altera/hps/altera_hps/hwlib/include/ 
 CFLAGS += -I ${SOCEDS_DEST_ROOT}/ip/altera/hps/altera_hps/hwlib/include/${ALTERA_ARCH}/
-CFLAGS += -mcpu=cortex-a9 -D${ALTERA_ARCH} -O3 -fno-inline -std=c99
+CFLAGS += -mcpu=cortex-a9 -D${ALTERA_ARCH} -g -O3 -fno-inline -std=c99
 
 # NOTE: Both IRQ stack allocation/init and vector table configuration are done in startup.c
 CFLAGS += -DALT_INT_PROVISION_STACK_SUPPORT=0 -DALT_INT_PROVISION_VECTOR_SUPPORT=0
