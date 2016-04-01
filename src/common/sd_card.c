@@ -34,18 +34,20 @@ SOFTWARE.
 #include <string.h>
 
 void sd_card_init(int step);
+void sd_card_default_rbf(int step);
 
 BOOT_STEP(300, sd_card_init, "init sdmmc card");
+BOOT_STEP(301, sd_card_default_rbf, "load 'default.rbf' from sdmmc card");
 
 int sd_parts(int argc, char** argv);
 int sd_files(int argc, char** argv);
 int sd_dump(int argc, char** argv);
-int sd_load_rbf(int argc, char** argv);
+int sd_rbf(int argc, char** argv);
 
 TERMINAL_COMMAND("sd-parts", sd_parts, "Show SD Card Partitons");
 TERMINAL_COMMAND("sd-files", sd_files, "Show SD Card Files appended to PImage in A2 Partition");
 TERMINAL_COMMAND("sd-dump", sd_dump, "{sector} {bytes} <or> {filename}");
-TERMINAL_COMMAND("sd-load-rbf", sd_load_rbf, "{filename}");
+TERMINAL_COMMAND("sd-rbf", sd_rbf, "{filename}");
 
 //
 // Card Initialization Boot Step
@@ -119,8 +121,8 @@ void sd_card_init(int step)
     printf("INFO: Card size = %d MB\n", (sd_card_size >> 10));
   }
 
-  //if (status == ALT_E_SUCCESS)
-  //{ status = alt_sdmmc_dma_enable(); }
+  if (status == ALT_E_SUCCESS)
+  { status = alt_sdmmc_dma_enable(); }
 
   if (status == ALT_E_SUCCESS)
   { status = alt_sdmmc_card_clk_div_set(0x00000002); }
@@ -134,6 +136,25 @@ void sd_card_init(int step)
   { puts("INFO: SD Card Init SUCCESS"); }
   
   return;
+}
+
+int sd_load_rbf(char *filename);
+
+void sd_card_default_rbf(int step)
+{
+  int rtn;
+  
+  puts("INFO: Loading 'default.rbf'");
+  flush();
+  
+  rtn = sd_load_rbf("default.rbf");
+  
+  if (rtn == 0)
+    puts("   SUCCESS");
+  else if (rtn == -1)
+    puts("ERROR: File not found");
+  else
+    printf("ERROR: Error Code (%i)\n", rtn);
 }
 
 //
@@ -248,6 +269,74 @@ int sd_find_file(char *filename, int *sector, int *bytes)
   
   return -1;
 }
+
+int sd_load_rbf(char *filename)
+{
+  ALT_STATUS_CODE status;
+  int sector;
+  int bytes;
+  int level;
+  int x;
+  unsigned int buf[1024]; 
+  volatile unsigned int *fpgamgr_ctrl_0 = (volatile unsigned int*) 0xFFD03070;
+  volatile unsigned int *fpgamgr_ctrl_1= (volatile unsigned int*) 0xFFD03074;
+  volatile unsigned int *fpgamgr_ctrl_2 = (volatile unsigned int*) 0xFFD03078;
+  volatile unsigned int *fpgamgr_stat = (volatile unsigned int*) 0xFFD03080;
+  volatile unsigned int *fpgamgr_fsta = (volatile unsigned int*) 0xFFD03094;
+  volatile unsigned int *fpgamgr_imag = (volatile unsigned int*) 0xFFCFE400;
+  
+  if (sd_find_file(filename, &sector, &bytes))
+    return -1;
+
+  *fpgamgr_ctrl_0 = 0x00000106;
+  *fpgamgr_ctrl_1 = 0x00000000;
+  *fpgamgr_ctrl_2 = 0x01000001;
+  
+  *fpgamgr_ctrl_0 = 0x00000006;
+  while ((*fpgamgr_stat & 0x0000000E) != 0) ;
+  *fpgamgr_ctrl_0 = 0x00000106;  
+  while ((*fpgamgr_stat & 0x000000A0) != 0x00000080) ;
+  
+  while (bytes > 0)
+  {
+  
+    status = alt_sdmmc_read(&sd_card_info, (char*)buf, (void*)(sector * 512), (4 * 1024));
+    
+    if (status != ALT_E_SUCCESS)
+      return -2;
+      
+    sector += 8;
+    
+    level = *fpgamgr_fsta & 0xFF;
+    
+    for (x = 0; x < (1024); x++)
+    {
+      while (level > 63) 
+        level = *fpgamgr_fsta & 0xFF;
+      
+      *fpgamgr_imag = buf[x];
+ 
+      level++;
+      bytes -= 4;
+      
+      if (bytes <= 0)
+        break;
+    }
+    
+    if (*fpgamgr_stat & 0x00000020)
+      return -3;
+  }
+  
+  while (*fpgamgr_stat & 0x00000080) ;
+  while ((*fpgamgr_stat & 0x00000004) == 0) ;
+  
+  *fpgamgr_ctrl_0 = 0x00000107;
+  *fpgamgr_ctrl_1 = 0x01000001;
+  *fpgamgr_ctrl_2 = 0x01000000;
+    
+  return 0;
+}
+
 
 //
 // SD Card Terminal Commands
@@ -398,78 +487,25 @@ int sd_dump(int argc, char** argv)
   return 0;
 }
 
-int sd_load_rbf(int argc, char** argv)
+int sd_rbf(int argc, char** argv)
 {
-  ALT_STATUS_CODE status;
-  int sector;
-  int bytes;
-  volatile unsigned int *fpgamgr_ctrl_0 = (volatile unsigned int*) 0xFFD03070;
-  volatile unsigned int *fpgamgr_ctrl_1= (volatile unsigned int*) 0xFFD03074;
-  volatile unsigned int *fpgamgr_ctrl_2 = (volatile unsigned int*) 0xFFD03078;
-  volatile unsigned int *fpgamgr_stat = (volatile unsigned int*) 0xFFD03080;
+  int rtn;
   
-  if (argc == 2)
-  {
-    if (sd_find_file(argv[1], &sector, &bytes))
-    {
-      printf("ERROR: Did not find file '%s'\n", argv[1]);
-      return -1;
-    }
-  }
-  else
+  if (argc != 2)
   {
     puts("ERROR: Wrong number of arguments");
     return -2;
   }
 
-  *fpgamgr_ctrl_0 = 0x00000106;
-  *fpgamgr_ctrl_1 = 0x00000000;
-  *fpgamgr_ctrl_2 = 0x01000001;
-  
-  *fpgamgr_ctrl_0 = 0x00000006;
-  puts("Loading file ...");
+  puts("Loading file...\n");
   flush();
-  *fpgamgr_ctrl_0 = 0x00000106;
   
-  puts("  Initializing");
-  
-  while ((*fpgamgr_stat & 0x000000A0) != 0x00000080) ;
-  
-  puts("  Configuration started");
-  
-  while (bytes > 0)
-  {
-  
-    status = alt_sdmmc_read(&sd_card_info, (char*)0xFFCFE400, (void*)(sector * 512), 512);
-    sector++;
-    bytes -= 512;
-    
-    if (status != ALT_E_SUCCESS)
-    {
-      puts("ERROR: Unable to read from SD Card");
-      return -4;
-    }
-    
-    if (*fpgamgr_stat & 0x00000020)
-    {
-      puts("ERROR: nStatus asserted during configuration");
-      return -4;
-    }
-  }
-  
-  while (*fpgamgr_stat & 0x00000080) ;
-  
-  puts("  Configuration done");
-  
-  while ((*fpgamgr_stat & 0x00000004) == 0) ;
-  
-  puts("  User Mode asserted");
-  
-  *fpgamgr_ctrl_0 = 0x00000107;
-  *fpgamgr_ctrl_1 = 0x01000001;
-  *fpgamgr_ctrl_2 = 0x01000000;
-  
-  printf("%-30s\n", "DONE");
+  rtn = sd_load_rbf(argv[1]);
+
+  if (rtn == 0)
+    puts("   SUCCESS");
+  else
+    printf("ERROR: Error Code (%i)\n", rtn);
     
   return 0;
 }
