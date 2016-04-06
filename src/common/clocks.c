@@ -28,7 +28,6 @@ SOFTWARE.
 */
 
 #include "alt_clock_manager.h"
-#include "alt_16550_uart.h"
 #include "terminal.h"
 #include "simple_stdio.h"
 #include <string.h>
@@ -59,62 +58,62 @@ volatile int clock_settings_pending;
 // Clock Helper Lookup Tables
 //
 
-struct {char* name; unsigned int *setting;} clock_setting_names[] = 
+struct {char* name; uint32_t *setting;} clock_setting_names[] = 
 {
-  {"mainpll.vco0_psrc", (unsigned int*) &(clock_config.mainpll.vco0_psrc)},
-  {"mainpll.vco1_denom", (unsigned int*) &(clock_config.mainpll.vco1_denom)},
-  {"mainpll.vco1_numer", (unsigned int*) &(clock_config.mainpll.vco1_numer)},
-  {"mainpll.mpuclk_cnt", (unsigned int*) &(clock_config.mainpll.mpuclk_cnt)},
-  {"mainpll.mpuclk_src", (unsigned int*) &(clock_config.mainpll.mpuclk_src)},
-  {"mainpll.nocclk_cnt", (unsigned int*) &(clock_config.mainpll.nocclk_cnt)},
-  {"mainpll.nocclk_src", (unsigned int*) &(clock_config.mainpll.nocclk_src)},
-  {"mainpll.cntr2clk_cnt", (unsigned int*) &(clock_config.mainpll.cntr2clk_cnt)},
-  {"mainpll.cntr3clk_cnt", (unsigned int*) &(clock_config.mainpll.cntr3clk_cnt)},
-  {"mainpll.cntr4clk_cnt", (unsigned int*) &(clock_config.mainpll.cntr4clk_cnt)},
-  {"mainpll.cntr5clk_cnt", (unsigned int*) &(clock_config.mainpll.cntr5clk_cnt)},
-  {"mainpll.cntr6clk_cnt", (unsigned int*) &(clock_config.mainpll.cntr6clk_cnt)},
-  {"mainpll.cntr7clk_cnt", (unsigned int*) &(clock_config.mainpll.cntr7clk_cnt)},
-  {"mainpll.cntr7clk_src", (unsigned int*) &(clock_config.mainpll.cntr7clk_src)},
-  {"mainpll.cntr8clk_cnt", (unsigned int*) &(clock_config.mainpll.cntr8clk_cnt)},
-  {"mainpll.cntr9clk_cnt", (unsigned int*) &(clock_config.mainpll.cntr9clk_cnt)},
-  {"mainpll.cntr9clk_src", (unsigned int*) &(clock_config.mainpll.cntr9clk_src)},
-  {"mainpll.cntr15clk_cnt", (unsigned int*) &(clock_config.mainpll.cntr15clk_cnt)},
-  {"mainpll.nocdiv_l4mainclk", (unsigned int*) &(clock_config.mainpll.nocdiv_l4mainclk)},
-  {"mainpll.nocdiv_l4mpclk", (unsigned int*) &(clock_config.mainpll.nocdiv_l4mpclk)},
-  {"mainpll.nocdiv_l4spclk", (unsigned int*) &(clock_config.mainpll.nocdiv_l4spclk)},
-  {"mainpll.nocdiv_csatclk", (unsigned int*) &(clock_config.mainpll.nocdiv_csatclk)},
-  {"mainpll.nocdiv_cstraceclk", (unsigned int*) &(clock_config.mainpll.nocdiv_cstraceclk)},
-  {"mainpll.nocdiv_cspdbgclk", (unsigned int*) &(clock_config.mainpll.nocdiv_cspdbgclk)},
+  {"mainpll.vco0_psrc", &(clock_config.mainpll.vco0_psrc)},
+  {"mainpll.vco1_denom", &(clock_config.mainpll.vco1_denom)},
+  {"mainpll.vco1_numer", &(clock_config.mainpll.vco1_numer)},
+  {"mainpll.mpuclk_cnt", &(clock_config.mainpll.mpuclk_cnt)},
+  {"mainpll.mpuclk_src", &(clock_config.mainpll.mpuclk_src)},
+  {"mainpll.nocclk_cnt", &(clock_config.mainpll.nocclk_cnt)},
+  {"mainpll.nocclk_src", &(clock_config.mainpll.nocclk_src)},
+  {"mainpll.cntr2clk_cnt", &(clock_config.mainpll.cntr2clk_cnt)},
+  {"mainpll.cntr3clk_cnt", &(clock_config.mainpll.cntr3clk_cnt)},
+  {"mainpll.cntr4clk_cnt", &(clock_config.mainpll.cntr4clk_cnt)},
+  {"mainpll.cntr5clk_cnt", &(clock_config.mainpll.cntr5clk_cnt)},
+  {"mainpll.cntr6clk_cnt", &(clock_config.mainpll.cntr6clk_cnt)},
+  {"mainpll.cntr7clk_cnt", &(clock_config.mainpll.cntr7clk_cnt)},
+  {"mainpll.cntr7clk_src", &(clock_config.mainpll.cntr7clk_src)},
+  {"mainpll.cntr8clk_cnt", &(clock_config.mainpll.cntr8clk_cnt)},
+  {"mainpll.cntr9clk_cnt", &(clock_config.mainpll.cntr9clk_cnt)},
+  {"mainpll.cntr9clk_src", &(clock_config.mainpll.cntr9clk_src)},
+  {"mainpll.cntr15clk_cnt", &(clock_config.mainpll.cntr15clk_cnt)},
+  {"mainpll.nocdiv_l4mainclk", &(clock_config.mainpll.nocdiv_l4mainclk)},
+  {"mainpll.nocdiv_l4mpclk", &(clock_config.mainpll.nocdiv_l4mpclk)},
+  {"mainpll.nocdiv_l4spclk", &(clock_config.mainpll.nocdiv_l4spclk)},
+  {"mainpll.nocdiv_csatclk", &(clock_config.mainpll.nocdiv_csatclk)},
+  {"mainpll.nocdiv_cstraceclk", &(clock_config.mainpll.nocdiv_cstraceclk)},
+  {"mainpll.nocdiv_cspdbgclk", &(clock_config.mainpll.nocdiv_cspdbgclk)},
   
-  {"perpll.vco0_psrc", (unsigned int*) &(clock_config.perpll.vco0_psrc)},
-  {"perpll.vco1_denom", (unsigned int*) &(clock_config.perpll.vco1_denom)},
-  {"perpll.vco1_numer", (unsigned int*) &(clock_config.perpll.vco1_numer)},
-  {"perpll.cntr2clk_cnt", (unsigned int*) &(clock_config.perpll.cntr2clk_cnt)},
-  {"perpll.cntr2clk_src", (unsigned int*) &(clock_config.perpll.cntr2clk_src)},
-  {"perpll.cntr3clk_cnt", (unsigned int*) &(clock_config.perpll.cntr3clk_cnt)},
-  {"perpll.cntr3clk_src", (unsigned int*) &(clock_config.perpll.cntr3clk_src)},
-  {"perpll.cntr4clk_cnt", (unsigned int*) &(clock_config.perpll.cntr4clk_cnt)},
-  {"perpll.cntr4clk_src", (unsigned int*) &(clock_config.perpll.cntr4clk_src)},
-  {"perpll.cntr5clk_cnt", (unsigned int*) &(clock_config.perpll.cntr5clk_cnt)},
-  {"perpll.cntr5clk_src", (unsigned int*) &(clock_config.perpll.cntr5clk_src)},
-  {"perpll.cntr6clk_cnt", (unsigned int*) &(clock_config.perpll.cntr6clk_cnt)},
-  {"perpll.cntr6clk_src", (unsigned int*) &(clock_config.perpll.cntr6clk_src)},
-  {"perpll.cntr7clk_cnt", (unsigned int*) &(clock_config.perpll.cntr7clk_cnt)},
-  {"perpll.cntr8clk_cnt", (unsigned int*) &(clock_config.perpll.cntr8clk_cnt)},
-  {"perpll.cntr8clk_src", (unsigned int*) &(clock_config.perpll.cntr8clk_src)},
-  {"perpll.cntr9clk_cnt", (unsigned int*) &(clock_config.perpll.cntr9clk_cnt)},
-  {"perpll.emacctl_emac0sel", (unsigned int*) &(clock_config.perpll.emacctl_emac0sel)},
-  {"perpll.emacctl_emac1sel", (unsigned int*) &(clock_config.perpll.emacctl_emac1sel)},
-  {"perpll.emacctl_emac2sel", (unsigned int*) &(clock_config.perpll.emacctl_emac2sel)},
-  {"perpll.gpiodiv_gpiodbclk", (unsigned int*) &(clock_config.perpll.gpiodiv_gpiodbclk)},
+  {"perpll.vco0_psrc", &(clock_config.perpll.vco0_psrc)},
+  {"perpll.vco1_denom", &(clock_config.perpll.vco1_denom)},
+  {"perpll.vco1_numer", &(clock_config.perpll.vco1_numer)},
+  {"perpll.cntr2clk_cnt", &(clock_config.perpll.cntr2clk_cnt)},
+  {"perpll.cntr2clk_src", &(clock_config.perpll.cntr2clk_src)},
+  {"perpll.cntr3clk_cnt", &(clock_config.perpll.cntr3clk_cnt)},
+  {"perpll.cntr3clk_src", &(clock_config.perpll.cntr3clk_src)},
+  {"perpll.cntr4clk_cnt", &(clock_config.perpll.cntr4clk_cnt)},
+  {"perpll.cntr4clk_src", &(clock_config.perpll.cntr4clk_src)},
+  {"perpll.cntr5clk_cnt", &(clock_config.perpll.cntr5clk_cnt)},
+  {"perpll.cntr5clk_src", &(clock_config.perpll.cntr5clk_src)},
+  {"perpll.cntr6clk_cnt", &(clock_config.perpll.cntr6clk_cnt)},
+  {"perpll.cntr6clk_src", &(clock_config.perpll.cntr6clk_src)},
+  {"perpll.cntr7clk_cnt", &(clock_config.perpll.cntr7clk_cnt)},
+  {"perpll.cntr8clk_cnt", &(clock_config.perpll.cntr8clk_cnt)},
+  {"perpll.cntr8clk_src", &(clock_config.perpll.cntr8clk_src)},
+  {"perpll.cntr9clk_cnt", &(clock_config.perpll.cntr9clk_cnt)},
+  {"perpll.emacctl_emac0sel", &(clock_config.perpll.emacctl_emac0sel)},
+  {"perpll.emacctl_emac1sel", &(clock_config.perpll.emacctl_emac1sel)},
+  {"perpll.emacctl_emac2sel", &(clock_config.perpll.emacctl_emac2sel)},
+  {"perpll.gpiodiv_gpiodbclk", &(clock_config.perpll.gpiodiv_gpiodbclk)},
    
-  {"alteragrp.nocclk", (unsigned int*) &(clock_config.alteragrp.nocclk)},
+  {"alteragrp.nocclk", &(clock_config.alteragrp.nocclk)},
   
-  {"clk_freq_of_eosc1", (unsigned int*) &(clock_src_clks.clk_freq_of_eosc1)},
-  {"clk_freq_of_f2h_free", (unsigned int*) &(clock_src_clks.clk_freq_of_f2h_free)},
-  {"clk_freq_of_cb_intosc_ls", (unsigned int*) &(clock_src_clks.clk_freq_of_cb_intosc_ls)},
+  {"clk_freq_of_eosc1", &(clock_src_clks.clk_freq_of_eosc1)},
+  {"clk_freq_of_f2h_free", &(clock_src_clks.clk_freq_of_f2h_free)},
+  {"clk_freq_of_cb_intosc_ls", &(clock_src_clks.clk_freq_of_cb_intosc_ls)},
   
-  {(char*)0, (unsigned int*) 0}
+  {(char*)0, (uint32_t*) 0}
 };
   
 struct {char* name; ALT_CLK_t clk;} clock_names[] = 
