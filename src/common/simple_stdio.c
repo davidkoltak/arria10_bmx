@@ -68,16 +68,21 @@ void chomp(char *s)
 void flush()
 {
   uint32_t level;
+  uint32_t status;
 
   if (_stdio_uart_handle.device < 0)
     return;
     
-  level = 0;
   do
   {
     alt_16550_fifo_level_get_tx(&_stdio_uart_handle, &level);
   } while (level > 0);
 
+  do
+  {
+    alt_16550_line_status_get(&_stdio_uart_handle, &status);
+  } while ((status & ALT_16550_LINE_STATUS_TEMT) == 0);
+  
   return;
 }
 
