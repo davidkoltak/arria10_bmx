@@ -31,6 +31,8 @@ SOFTWARE.
 #include "simple_stdio.h"
 #include "terminal.h"
 
+extern void _startup();
+
 //
 // NULL entry for terminal command table in memory
 //
@@ -156,6 +158,8 @@ void terminal()
     
     if (strcmp(argv[0], "exit") == 0)
       break;
+    else if (strcmp(argv[0], "restart") == 0)
+      _startup();
 
     cmd = terminal_cmds;
     while (cmd->name != (char*)0)

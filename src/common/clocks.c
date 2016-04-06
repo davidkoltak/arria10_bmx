@@ -30,7 +30,6 @@ SOFTWARE.
 #include "alt_clock_manager.h"
 #include "alt_16550_uart.h"
 #include "terminal.h"
-#include "boot.h"
 #include "simple_stdio.h"
 #include <string.h>
 
@@ -38,10 +37,6 @@ __attribute__((weak))
 void boot_step_stdio_init(int step)  // NOTE: Required to ensure baud rate
 { return; }                          //       is re-calculated after a clock
                                      //       rate change.
-
-void clock_init(int step);
-
-BOOT_STEP(20, clock_init, "configure clocks");
 
 int clock_get(int argc, char** argv);
 int clock_ctrl(int argc, char** argv);
@@ -58,16 +53,7 @@ TERMINAL_COMMAND("clock-setting", clock_setting, "{list | setting value | commit
 extern CLOCK_MANAGER_CONFIG clock_config;
 extern CLOCK_SOURCE_CONFIG clock_src_clks;
 
-volatile int clock_settings_commited;
-
-void clock_init(int step)
-{
-
-  alt_clkmgr_config(&clock_config, &clock_src_clks);
-  clock_settings_commited = 1;
-  
-  return;
-}
+volatile int clock_settings_pending;
 
 //
 // Clock Helper Lookup Tables
@@ -246,8 +232,8 @@ int clock_setting(int argc, char** argv)
       for (x = 0; clock_setting_names[x].name != (char*)0; x++)
         printf("%-30s : %-12u\n", clock_setting_names[x].name, *(clock_setting_names[x].setting));
            
-      if (clock_settings_commited == 0)
-      { puts("\nWARNING: Uncommited setting changes - use 'clock-setting commit'"); }
+      if (clock_settings_pending)
+      { puts("\nWARNING: Pending setting changes - use 'clock-setting commit'"); }
       
       return 0;
     }
@@ -257,7 +243,7 @@ int clock_setting(int argc, char** argv)
       alt_clkmgr_config(&clock_config, &clock_src_clks);
       boot_step_stdio_init(0); // NOTE: Just in case the baud rate is modified
 
-      clock_settings_commited = 1;
+      clock_settings_pending = 0;
       puts("\n  Settings Updated");
       
       return 0;
@@ -278,7 +264,7 @@ int clock_setting(int argc, char** argv)
         
         *(clock_setting_names[x].setting) = setting;
         printf("%-30s : %-12u\n", clock_setting_names[x].name, *(clock_setting_names[x].setting));
-        clock_settings_commited = 0;
+        clock_settings_pending = 1;
         
         return 0;
       }

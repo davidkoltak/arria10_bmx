@@ -62,7 +62,10 @@ int terminal_help(int argc, char** argv)
   }
   
   if (argc <= 1)
+  {
     printf("\n  %-16s : %s\n", "exit", "exit from terminal");
+    printf("  %-16s : %s\n", "restart", "call _startup() to start over");
+  }
 
   return 0;
 }
