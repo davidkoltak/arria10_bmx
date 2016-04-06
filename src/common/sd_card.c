@@ -46,7 +46,7 @@ int sd_rbf(int argc, char** argv);
 
 TERMINAL_COMMAND("sd-parts", sd_parts, "Show SD Card Partitons");
 TERMINAL_COMMAND("sd-files", sd_files, "Show SD Card Files appended to PImage in A2 Partition");
-TERMINAL_COMMAND("sd-dump", sd_dump, "{sector} {bytes} <or> {filename}");
+TERMINAL_COMMAND("sd-dump", sd_dump, "{sector bytes | filename}");
 TERMINAL_COMMAND("sd-rbf", sd_rbf, "{filename}");
 
 //

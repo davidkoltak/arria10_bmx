@@ -32,43 +32,43 @@ SOFTWARE.
 #include "alt_interrupt.h"
 #include "boot.h"
 
-void boot_step_wdog_stop(int step);
-void boot_step_icache_enable(int step);
-void boot_step_disable_fw(int step);
+void wdog_stop(int step);
+void icache_enable(int step);
+void disable_fw(int step);
 
-void boot_step_alt_int_global_init(int step);
-void boot_step_alt_int_cpu_init(int step);
-void boot_step_alt_int_global_enable_all(int step);
-void boot_step_alt_int_cpu_enable(int step);
+void int_global_init(int step);
+void int_cpu_init(int step);
+void int_global_enable_all(int step);
+void int_cpu_enable(int step);
 
-void boot_step_alt_int_cpu_disable(int step);
-void boot_step_alt_int_global_disable_all(int step);
-void boot_step_alt_int_cpu_uninit(int step);
-void boot_step_alt_int_global_uninit(int step);
+void int_cpu_disable(int step);
+void int_global_disable_all(int step);
+void int_cpu_uninit(int step);
+void int_global_uninit(int step);
 
-BOOT_STEP(100, boot_step_wdog_stop, "stop watchdog");
-BOOT_STEP(110, boot_step_icache_enable, "enable L1 instruction cache");
-BOOT_STEP(115, boot_step_disable_fw, "disable noc firewalls");
+BOOT_STEP(100, wdog_stop, "stop watchdog");
+BOOT_STEP(110, icache_enable, "enable L1 instruction cache");
+BOOT_STEP(115, disable_fw, "disable noc firewalls");
 
-BOOT_STEP(120, boot_step_alt_int_global_init, "init global interrupt");
-BOOT_STEP(130, boot_step_alt_int_cpu_init, "init cpu interrupt");
-BOOT_STEP(140, boot_step_alt_int_global_enable_all, "enable global interrupts");
-BOOT_STEP(150, boot_step_alt_int_cpu_enable, "enable cpu interrupts");
+BOOT_STEP(120, int_global_init, "init global interrupt");
+BOOT_STEP(130, int_cpu_init, "init cpu interrupt");
+BOOT_STEP(140, int_global_enable_all, "enable global interrupts");
+BOOT_STEP(150, int_cpu_enable, "enable cpu interrupts");
 
-BOOT_STEP(1850, boot_step_alt_int_cpu_disable, "disable cpu interrupts");
-BOOT_STEP(1860, boot_step_alt_int_global_disable_all, "disable global interrupts");
-BOOT_STEP(1870, boot_step_alt_int_cpu_uninit, "uninit cpu interrupt");
-BOOT_STEP(1880, boot_step_alt_int_global_uninit, "uninit global interrupt");
+BOOT_STEP(1850, int_cpu_disable, "disable cpu interrupts");
+BOOT_STEP(1860, int_global_disable_all, "disable global interrupts");
+BOOT_STEP(1870, int_cpu_uninit, "uninit cpu interrupt");
+BOOT_STEP(1880, int_global_uninit, "uninit global interrupt");
 
-void boot_step_wdog_stop(int step)
+void wdog_stop(int step)
 { alt_wdog_stop(ALT_WDOG0); }
 
-void boot_step_icache_enable(int step)
+void icache_enable(int step)
 { alt_cache_l1_instruction_enable(); }
 
 #define WRITE_REG32(ADDR, VAL) *((volatile unsigned int*) ADDR) = VAL
 
-void boot_step_disable_fw(int step)
+void disable_fw(int step)
 {
   WRITE_REG32(0xFFD13000,0x01010101);
   WRITE_REG32(0xFFD13004,0x01010101);
@@ -99,6 +99,7 @@ void boot_step_disable_fw(int step)
   WRITE_REG32(0xFFD13068,0x01010101);
   WRITE_REG32(0xFFD1306C,0x01010101);
   WRITE_REG32(0xFFD13070,0x01010101);
+  
   WRITE_REG32(0xFFD13100,0x0);
   WRITE_REG32(0xFFD13104,0x0);
   WRITE_REG32(0xFFD13108,0x01010001);
@@ -137,9 +138,11 @@ void boot_step_disable_fw(int step)
   WRITE_REG32(0xFFD1318C,0x01010001);
   WRITE_REG32(0xFFD13190,0x01010001);
   WRITE_REG32(0xFFD13194,0x01010001);
+  
   WRITE_REG32(0xFFD13500,0x03fe0101);
   WRITE_REG32(0xFFD13504,0x03fe0101);
   WRITE_REG32(0xFFD11000,0x7FFFBFFF);
+  
   WRITE_REG32(0xFFD13200,0x1);
   WRITE_REG32(0xFFD1320C,0x003f0000);
   WRITE_REG32(0xFFD13210,0x0);
@@ -147,6 +150,7 @@ void boot_step_disable_fw(int step)
   WRITE_REG32(0xFFD13218,0x0);
   WRITE_REG32(0xFFD1321C,0x0);
   WRITE_REG32(0xFFD13220,0x0);
+  
   WRITE_REG32(0xFFD13300,0x1111);
   WRITE_REG32(0xFFD13310,0xffff0000);
   WRITE_REG32(0xFFD13314,0x0);
@@ -178,27 +182,27 @@ void boot_step_disable_fw(int step)
   return;
 }
 
-void boot_step_alt_int_global_init(int step)
+void int_global_init(int step)
 { alt_int_global_init(); }
 
-void boot_step_alt_int_cpu_init(int step)
+void int_cpu_init(int step)
 { alt_int_cpu_init(); }
 
-void boot_step_alt_int_global_enable_all(int step)
+void int_global_enable_all(int step)
 { alt_int_global_enable_all(); }
 
-void boot_step_alt_int_cpu_enable(int step)
+void int_cpu_enable(int step)
 { alt_int_cpu_enable(); }
 
-void boot_step_alt_int_cpu_disable(int step)
+void int_cpu_disable(int step)
 { alt_int_cpu_disable(); }
 
-void boot_step_alt_int_global_disable_all(int step)
+void int_global_disable_all(int step)
 { alt_int_global_disable_all(); }
 
-void boot_step_alt_int_cpu_uninit(int step)
+void int_cpu_uninit(int step)
 { alt_int_cpu_uninit(); }
 
-void boot_step_alt_int_global_uninit(int step)
+void int_global_uninit(int step)
 { alt_int_global_uninit(); }
 

@@ -41,8 +41,8 @@ int terminal_mem_usage(int argc, char** argv);
 
 TERMINAL_COMMAND("help", terminal_help, "[command]");
 TERMINAL_COMMAND("read", terminal_read, "{b|h|w} {address}");
-TERMINAL_COMMAND("dump", terminal_dump, "{b|h|w} {address} {count}");
-TERMINAL_COMMAND("write", terminal_write, "{b|h|w} {address} {data} [data ...]");
+TERMINAL_COMMAND("dump", terminal_dump, "{b|h|w} {address count}");
+TERMINAL_COMMAND("write", terminal_write, "{b|h|w} {address data} [data ...]");
 TERMINAL_COMMAND("boot-steps", terminal_boot_steps, "Show boot steps in sequence order");
 TERMINAL_COMMAND("memory-usage", terminal_mem_usage, "Show memory usage");
 

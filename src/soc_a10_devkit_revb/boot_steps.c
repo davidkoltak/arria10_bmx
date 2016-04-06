@@ -31,19 +31,19 @@ SOFTWARE.
 #include "simple_stdio.h"
 #include "boot.h"
 
-void boot_step_clock_init(int step);
-void boot_step_pinmux_init(int step);
-void boot_step_stdio_init(int step);
-void boot_step_print_name(int step);
+void clock_init(int step);
+void pinmux_init(int step);
+void stdio_init(int step);
+void print_name(int step);
 
-BOOT_STEP(20, boot_step_clock_init, "configure clocks");
-BOOT_STEP(30, boot_step_pinmux_init, "configure pinmux");
-BOOT_STEP(40, boot_step_stdio_init, "init stdio");
-BOOT_STEP(50, boot_step_print_name, "display board identifier");
+BOOT_STEP(20, clock_init, "configure clocks");
+BOOT_STEP(30, pinmux_init, "configure pinmux");
+BOOT_STEP(40, stdio_init, "init stdio");
+BOOT_STEP(50, print_name, "display board identifier");
 
 extern ALT_16550_HANDLE_t _stdio_uart_handle;
 
-void boot_step_stdio_init(int step)
+void stdio_init(int step)
 {
   alt_16550_init(ALT_16550_DEVICE_SOCFPGA_UART1, (void*)0, 0, &_stdio_uart_handle);
   alt_16550_baudrate_set(&_stdio_uart_handle, ALT_16550_BAUDRATE_115200);
@@ -52,13 +52,13 @@ void boot_step_stdio_init(int step)
   alt_16550_enable(&_stdio_uart_handle);
 }
 
-void boot_step_print_name(int step)
+void print_name(int step)
 { puts("\n *** Arria 10 SoC DevKit (Rev B) *** "); }
 
 CLOCK_MANAGER_CONFIG clock_config;
 CLOCK_SOURCE_CONFIG clock_src_clks;
 
-void boot_step_clock_init(int step)
+void clock_init(int step)
 {
   //
   // NOTE: Settings copied from DTS
@@ -122,7 +122,7 @@ void boot_step_clock_init(int step)
   return;
 }
 
-void boot_step_pinmux_init(int step)
+void pinmux_init(int step)
 {
   int *shared_q1_pinmux = (int*) 0xFFD07000;
   int *shared_q2_pinmux = (int*) 0xFFD07030;

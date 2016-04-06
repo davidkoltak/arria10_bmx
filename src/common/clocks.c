@@ -32,10 +32,10 @@ SOFTWARE.
 #include "simple_stdio.h"
 #include <string.h>
 
-__attribute__((weak)) 
-void boot_step_stdio_init(int step)  // NOTE: Required to ensure baud rate
-{ return; }                          //       is re-calculated after a clock
-                                     //       rate change.
+__attribute__((weak)) void stdio_init(int step)  // NOTE: Required to ensure baud rate
+{ return; }                                      //       is re-calculated after a clock
+                                                 //       rate change. This is a weak
+                                                 //       function just in case.
 
 int clock_get(int argc, char** argv);
 int clock_ctrl(int argc, char** argv);
@@ -240,7 +240,7 @@ int clock_setting(int argc, char** argv)
     {
       flush();
       alt_clkmgr_config(&clock_config, &clock_src_clks);
-      boot_step_stdio_init(0); // NOTE: Just in case the baud rate is modified
+      stdio_init(0); // NOTE: Just in case the baud rate is modified
 
       clock_settings_pending = 0;
       puts("\n  Settings Updated");
