@@ -1,5 +1,5 @@
 /*
-  Clock and Pinmux settings for default ARRIA 10 DevKit (Rev A)
+  Pinmux settings and basic setup for default ARRIA 10 DevKit (Rev A)
   
   by David M. Koltak  02/29/2016
 
@@ -27,17 +27,14 @@ SOFTWARE.
   
 */
 
-#include "alt_clock_manager.h"
 #include "alt_16550_uart.h"
 #include "simple_stdio.h"
 #include "boot.h"
 
-void boot_step_clock_init(int step);
 void boot_step_pinmux_init(int step);
 void boot_step_stdio_init(int step);
 void boot_step_print_name(int step);
 
-BOOT_STEP(20, boot_step_clock_init, "configure clocks");
 BOOT_STEP(30, boot_step_pinmux_init, "configure pinmux");
 BOOT_STEP(40, boot_step_stdio_init, "init stdio");
 BOOT_STEP(50, boot_step_print_name, "display board identifier");
@@ -55,73 +52,6 @@ void boot_step_stdio_init(int step)
 
 void boot_step_print_name(int step)
 { puts("\n *** Arria 10 SoC DevKit (Rev A) EMAC SWIF TEST *** "); }
-
-void boot_step_clock_init(int step)
-{
-  CLOCK_MANAGER_CONFIG config;
-  CLOCK_SOURCE_CONFIG src_clks;
-  
-  //
-  // NOTE: Settings copied from DTS
-  //
-  
-  config.mainpll.vco0_psrc = 0;
-  config.mainpll.vco1_denom = 1;
-  config.mainpll.vco1_numer = 191;
-  config.mainpll.mpuclk_cnt = 0;
-  config.mainpll.mpuclk_src = 0;
-  config.mainpll.nocclk_cnt = 0;
-  config.mainpll.nocclk_src = 0;
-  config.mainpll.cntr2clk_cnt = 900;
-  config.mainpll.cntr3clk_cnt = 900;
-  config.mainpll.cntr4clk_cnt = 900;
-  config.mainpll.cntr5clk_cnt = 900;
-  config.mainpll.cntr6clk_cnt = 900;
-  config.mainpll.cntr7clk_cnt = 900;
-  config.mainpll.cntr7clk_src = 0;
-  config.mainpll.cntr8clk_cnt = 900;
-  config.mainpll.cntr9clk_cnt = 900;
-  config.mainpll.cntr9clk_src = 0;
-  config.mainpll.cntr15clk_cnt = 900;
-  config.mainpll.nocdiv_l4mainclk = 0;
-  config.mainpll.nocdiv_l4mpclk = 0;
-  config.mainpll.nocdiv_l4spclk = 2;
-  config.mainpll.nocdiv_csatclk = 0;
-  config.mainpll.nocdiv_cstraceclk = 1;
-  config.mainpll.nocdiv_cspdbgclk = 1;
-  
-  config.perpll.vco0_psrc = 0;
-  config.perpll.vco1_denom = 1;
-  config.perpll.vco1_numer = 159;
-  config.perpll.cntr2clk_cnt = 7;
-  config.perpll.cntr2clk_src = 1;
-  config.perpll.cntr3clk_cnt = 900;
-  config.perpll.cntr3clk_src = 1;
-  config.perpll.cntr4clk_cnt = 19;
-  config.perpll.cntr4clk_src = 1;
-  config.perpll.cntr5clk_cnt = 499;
-  config.perpll.cntr5clk_src = 1;
-  config.perpll.cntr6clk_cnt = 9;
-  config.perpll.cntr6clk_src = 1;
-  config.perpll.cntr7clk_cnt = 900;
-  config.perpll.cntr8clk_cnt = 900;
-  config.perpll.cntr8clk_src = 0;
-  config.perpll.cntr9clk_cnt = 900;
-  config.perpll.emacctl_emac0sel = 0;
-  config.perpll.emacctl_emac1sel = 0;
-  config.perpll.emacctl_emac2sel = 0;
-  config.perpll.gpiodiv_gpiodbclk = 32000;
-   
-  config.alteragrp.nocclk = 0x0384000b;
-  
-  src_clks.clk_freq_of_eosc1 = 25000000;
-  src_clks.clk_freq_of_f2h_free = 100000000;
-  src_clks.clk_freq_of_cb_intosc_ls = 100000000;
-
-  alt_clkmgr_config(&config, &src_clks);
-  
-  return;
-}
 
 void boot_step_pinmux_init(int step)
 {

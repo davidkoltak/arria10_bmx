@@ -28,10 +28,16 @@ SOFTWARE.
 */
 
 #include "alt_clock_manager.h"
+#include "alt_16550_uart.h"
 #include "terminal.h"
 #include "boot.h"
 #include "simple_stdio.h"
 #include <string.h>
+
+__attribute__((weak)) 
+void boot_step_stdio_init(int step)  // NOTE: Required to ensure baud rate
+{ return; }                          //       is re-calculated after a clock
+                                     //       rate change.
 
 void clock_init(int step);
 
@@ -49,69 +55,13 @@ TERMINAL_COMMAND("clock-setting", clock_setting, "{list | setting value | commit
 // Initialize Clocks
 //
 
-CLOCK_MANAGER_CONFIG clock_config;
-CLOCK_SOURCE_CONFIG clock_src_clks;
+extern CLOCK_MANAGER_CONFIG clock_config;
+extern CLOCK_SOURCE_CONFIG clock_src_clks;
 
 volatile int clock_settings_commited;
 
 void clock_init(int step)
 {
-  //
-  // NOTE: Settings copied from DTS
-  //
-  
-  clock_config.mainpll.vco0_psrc = 0;
-  clock_config.mainpll.vco1_denom = 1;
-  clock_config.mainpll.vco1_numer = 191;
-  clock_config.mainpll.mpuclk_cnt = 0;
-  clock_config.mainpll.mpuclk_src = 0;
-  clock_config.mainpll.nocclk_cnt = 0;
-  clock_config.mainpll.nocclk_src = 0;
-  clock_config.mainpll.cntr2clk_cnt = 900;
-  clock_config.mainpll.cntr3clk_cnt = 900;
-  clock_config.mainpll.cntr4clk_cnt = 900;
-  clock_config.mainpll.cntr5clk_cnt = 900;
-  clock_config.mainpll.cntr6clk_cnt = 900;
-  clock_config.mainpll.cntr7clk_cnt = 900;
-  clock_config.mainpll.cntr7clk_src = 0;
-  clock_config.mainpll.cntr8clk_cnt = 900;
-  clock_config.mainpll.cntr9clk_cnt = 900;
-  clock_config.mainpll.cntr9clk_src = 0;
-  clock_config.mainpll.cntr15clk_cnt = 900;
-  clock_config.mainpll.nocdiv_l4mainclk = 0;
-  clock_config.mainpll.nocdiv_l4mpclk = 0;
-  clock_config.mainpll.nocdiv_l4spclk = 2;
-  clock_config.mainpll.nocdiv_csatclk = 0;
-  clock_config.mainpll.nocdiv_cstraceclk = 1;
-  clock_config.mainpll.nocdiv_cspdbgclk = 1;
-  
-  clock_config.perpll.vco0_psrc = 0;
-  clock_config.perpll.vco1_denom = 1;
-  clock_config.perpll.vco1_numer = 159;
-  clock_config.perpll.cntr2clk_cnt = 7;
-  clock_config.perpll.cntr2clk_src = 1;
-  clock_config.perpll.cntr3clk_cnt = 900;
-  clock_config.perpll.cntr3clk_src = 1;
-  clock_config.perpll.cntr4clk_cnt = 19;
-  clock_config.perpll.cntr4clk_src = 1;
-  clock_config.perpll.cntr5clk_cnt = 499;
-  clock_config.perpll.cntr5clk_src = 1;
-  clock_config.perpll.cntr6clk_cnt = 9;
-  clock_config.perpll.cntr6clk_src = 1;
-  clock_config.perpll.cntr7clk_cnt = 900;
-  clock_config.perpll.cntr8clk_cnt = 900;
-  clock_config.perpll.cntr8clk_src = 0;
-  clock_config.perpll.cntr9clk_cnt = 900;
-  clock_config.perpll.emacctl_emac0sel = 0;
-  clock_config.perpll.emacctl_emac1sel = 0;
-  clock_config.perpll.emacctl_emac2sel = 0;
-  clock_config.perpll.gpiodiv_gpiodbclk = 32000;
-   
-  clock_config.alteragrp.nocclk = 0x0384000b;
-  
-  clock_src_clks.clk_freq_of_eosc1 = 25000000;
-  clock_src_clks.clk_freq_of_f2h_free = 100000000;
-  clock_src_clks.clk_freq_of_cb_intosc_ls = 100000000;
 
   alt_clkmgr_config(&clock_config, &clock_src_clks);
   clock_settings_commited = 1;
@@ -120,7 +70,7 @@ void clock_init(int step)
 }
 
 //
-// Clock Helper Functions
+// Clock Helper Lookup Tables
 //
 
 struct {char* name; unsigned int *setting;} clock_setting_names[] = 
@@ -287,6 +237,7 @@ int clock_setting(int argc, char** argv)
 {
   int x;
   unsigned int setting;
+  unsigned int uart_baud;
   
   if (argc == 2)
   {
@@ -297,15 +248,22 @@ int clock_setting(int argc, char** argv)
            
       if (clock_settings_commited == 0)
       { puts("\nWARNING: Uncommited setting changes - use 'clock-setting commit'"); }
+      
+      return 0;
     }
     else if (strcmp(argv[1], "commit") == 0)
     {
       flush();
       alt_clkmgr_config(&clock_config, &clock_src_clks);
-      flush();
+      boot_step_stdio_init(0); // NOTE: Just in case the baud rate is modified
+
       clock_settings_commited = 1;
       puts("\n  Settings Updated");
+      
+      return 0;
     }
+    else
+      puts("ERROR: Invalid argument");
   }
   else if (argc == 3)
   {
@@ -321,13 +279,14 @@ int clock_setting(int argc, char** argv)
         *(clock_setting_names[x].setting) = setting;
         printf("%-30s : %-12u\n", clock_setting_names[x].name, *(clock_setting_names[x].setting));
         clock_settings_commited = 0;
+        
+        return 0;
       }
+    
+    puts("ERROR: Setting not found");
   }
   else
-  {
     puts("ERROR: Wrong number of arguments");
-    return -1;
-  }
   
-  return 0;
+  return -1;
 }

@@ -1,5 +1,5 @@
 /*
-  Clock and Pinmux settings for default ARRIA 10 DevKit (Rev A)
+  Pinmux settings and basic setup for default ARRIA 10 DevKit (Rev A)
   
   by David M. Koltak  02/29/2016
 
@@ -27,7 +27,6 @@ SOFTWARE.
   
 */
 
-#include "alt_clock_manager.h"
 #include "alt_16550_uart.h"
 #include "alt_timers.h"
 #include "alt_globaltmr.h"
