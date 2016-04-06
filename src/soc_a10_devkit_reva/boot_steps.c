@@ -28,9 +28,6 @@ SOFTWARE.
 */
 
 #include "alt_16550_uart.h"
-#include "alt_timers.h"
-#include "alt_globaltmr.h"
-#include "alt_dma.h"
 #include "simple_stdio.h"
 #include "boot.h"
 
@@ -39,22 +36,10 @@ void pinmux_init(int step);
 void stdio_init(int step);
 void print_name(int step);
 
-void dma_init(int step);
-void globaltmr_init(int step);
-
-void dma_uninit(int step);
-void globaltmr_uninit(int step);
-
 BOOT_STEP(20, clock_init, "configure clocks");
 BOOT_STEP(30, pinmux_init, "configure pinmux");
 BOOT_STEP(40, stdio_init, "init stdio");
 BOOT_STEP(50, print_name, "display board identifier");
-
-BOOT_STEP(220, globaltmr_init, "init global timer");
-BOOT_STEP(230, dma_init, "init dma engine");
-
-BOOT_STEP(1710, dma_uninit, "uninit dma engine");
-BOOT_STEP(1720, globaltmr_uninit, "uninit global timer");
 
 extern ALT_16550_HANDLE_t _stdio_uart_handle;
 
@@ -186,31 +171,3 @@ void pinmux_init(int step)
   
   return;
 }
-
-void globaltmr_init(int step)
-{ alt_globaltmr_init(); }
-
-void dma_init(int step)
-{ 
-  ALT_DMA_CFG_t dma_cfg;
-  int i;
-  
-  dma_cfg.manager_sec = ALT_DMA_SECURITY_SECURE;
-  
-  for (i = 0; i < (sizeof(dma_cfg.irq_sec) / sizeof(dma_cfg.irq_sec[0])); ++i)
-    dma_cfg.irq_sec[i] = ALT_DMA_SECURITY_SECURE;       
-      
-  for (i = 0; i < (sizeof(dma_cfg.periph_sec) / sizeof(dma_cfg.periph_sec[0])); ++i)
-    dma_cfg.periph_sec[i] = ALT_DMA_SECURITY_SECURE;
-    
-  for (i = 0; i < (sizeof(dma_cfg.periph_mux) / sizeof(dma_cfg.periph_mux[0])); ++i)
-    dma_cfg.periph_mux[i] = ALT_DMA_PERIPH_MUX_DEFAULT;
-    
-  alt_dma_init(&dma_cfg);
-}
-
-void dma_uninit(int step)
-{ alt_dma_uninit(); }
-
-void globaltmr_uninit(int step)
-{ alt_globaltmr_uninit(); }
