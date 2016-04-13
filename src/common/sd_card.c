@@ -226,7 +226,7 @@ int sd_find_file(char *filename, int *sector, int *bytes)
   
   for (x = 0; x < 4; x++)
   {
-    if (sd_parts_list.p[x].type == 0xA2);
+    if (sd_parts_list.p[x].type == 0xA2)
     {
       status = alt_sdmmc_read(&sd_card_info, buf, (void*)((sd_parts_list.p[x].start + 0x800) * 512), 512);
 
@@ -377,7 +377,7 @@ int sd_files(int argc, char** argv)
   
   for (x = 0; x < 4; x++)
   {
-    if (sd_parts_list.p[x].type == 0xA2);
+    if (sd_parts_list.p[x].type == 0xA2)
     {
       status = alt_sdmmc_read(&sd_card_info, buf, (void*)((sd_parts_list.p[x].start + 0x800) * 512), 512);
 
