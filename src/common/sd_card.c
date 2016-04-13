@@ -125,7 +125,7 @@ void sd_card_init(int step)
   { status = alt_sdmmc_dma_enable(); }
 
   if (status == ALT_E_SUCCESS)
-  { status = alt_sdmmc_card_clk_div_set(0x00000002); }
+  { status = alt_sdmmc_card_clk_div_set(0x00000004); } // (200MHz SDMMC CLK) / 4 = 50 MHz / 8 = 6 MHz (Class 4 card or better)
   
   if (sd_card_block_size != 512)
   { printf("WARNING: SD Card with blocksize %i is not supported - yet", sd_card_block_size); }
@@ -290,7 +290,7 @@ int sd_load_rbf(char *filename)
 
   *fpgamgr_ctrl_0 = 0x00000106;
   *fpgamgr_ctrl_1 = 0x00000000;
-  *fpgamgr_ctrl_2 = 0x01000001;
+  *fpgamgr_ctrl_2 = 0x01030001;
   
   *fpgamgr_ctrl_0 = 0x00000006;
   while ((*fpgamgr_stat & 0x0000000E) != 0) ;
