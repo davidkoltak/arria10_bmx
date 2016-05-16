@@ -135,9 +135,16 @@ char *safe_gets(char *s, int max)
     alt_16550_fifo_read(&_stdio_uart_handle, ptr, 1);
     level--;
     
-    if ((*ptr == 10) || (*ptr == 13)) // CR,LF
+    if ((*ptr == '\r') || (*ptr == '\n'))
     {
+      if (*ptr == '\n')
+        alt_16550_fifo_write(&_stdio_uart_handle, "\r", 1);
+    
       alt_16550_fifo_write(&_stdio_uart_handle, ptr, 1);
+      
+      if (*ptr == '\r')
+        alt_16550_fifo_write(&_stdio_uart_handle, "\n", 1);
+        
       ptr++;
       break;
     }
@@ -177,6 +184,7 @@ int putchar(int c)
     return 0;
       
   alt_16550_fifo_size_get_tx(&_stdio_uart_handle, &fsize);
+  fsize -= 2; // need 2 bytes in fifo
   
   do {
     alt_16550_fifo_level_get_tx(&_stdio_uart_handle, &level);
@@ -184,7 +192,14 @@ int putchar(int c)
   
   buf = (char) (c & 0xFF);
   
+  if (buf == '\n')
+    alt_16550_fifo_write(&_stdio_uart_handle, "\r", 1);
+    
   alt_16550_fifo_write(&_stdio_uart_handle, &buf, 1);
+      
+  if (buf == '\r')
+    alt_16550_fifo_write(&_stdio_uart_handle, "\n", 1);
+    
   return c;
 }
 
@@ -199,6 +214,7 @@ int puts(char *s)
     return 0;
       
   alt_16550_fifo_size_get_tx(&_stdio_uart_handle, &fsize);
+  fsize -= 2; // need 2 bytes in fifo
   ptr = s;
   level = fsize;
   rtn = 0;
@@ -218,7 +234,7 @@ int puts(char *s)
     rtn++;
   }
   
-  alt_16550_fifo_write(&_stdio_uart_handle, "\n", 1);
+  alt_16550_fifo_write(&_stdio_uart_handle, "\r\n", 2);
   rtn++;
   
   return rtn;
@@ -430,10 +446,25 @@ int va_sprintf(char *s, char *f, va_list args)
     }
     else if (*f_ptr != '\0')
     {
+      if (*f_ptr == '\n')
+      {
+        *s_ptr = '\r';
+        s_ptr++;
+        rtn++;
+      }
+      
       *s_ptr = *f_ptr;
-      f_ptr++;
       s_ptr++;
       rtn++;
+      
+      if (*f_ptr == '\r')
+      {
+        *s_ptr = '\n';
+        s_ptr++;
+        rtn++;
+      }
+      
+      f_ptr++;
     }
   }
   

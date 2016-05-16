@@ -88,7 +88,7 @@ void clock_init(int step)
   clock_config.mainpll.nocdiv_csatclk = 0;
   clock_config.mainpll.nocdiv_cstraceclk = 1;
   clock_config.mainpll.nocdiv_cspdbgclk = 1;
-  
+      
   clock_config.perpll.vco0_psrc = 0;
   clock_config.perpll.vco1_denom = 1;
   clock_config.perpll.vco1_numer = 159;
