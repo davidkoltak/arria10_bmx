@@ -203,7 +203,7 @@ int terminal_dump(int argc, char** argv)
       while (addr & 0xF)
       {
         printf("   ");
-        estr[addr & 0xF] = '\0';
+        estr[addr & 0xF] = ' ';
         addr++;
       }
 
