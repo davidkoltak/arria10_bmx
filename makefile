@@ -26,7 +26,7 @@
 # SOFTWARE.
 #
 
-BOARD ?= soc_a10_devkit_reva
+BOARD ?= soc_a10_devkit_revc
 
 CROSS_COMPILE ?= arm-altera-eabi-
 SOCEDS_DEST_ROOT ?= ~/altera/15.1/embedded
