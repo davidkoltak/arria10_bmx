@@ -112,6 +112,7 @@ void clock_init(int step)
   clock_config.perpll.gpiodiv_gpiodbclk = 32000;
    
   clock_config.alteragrp.nocclk = 0x0384000b;
+  clock_config.alteragrp.mpuclk = 0x03840001;
 
   clock_src_clks.clk_freq_of_eosc1 = 25000000;
   clock_src_clks.clk_freq_of_f2h_free = 100000000;

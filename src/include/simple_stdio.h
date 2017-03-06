@@ -31,6 +31,8 @@ SOFTWARE.
 #ifndef _SIMPLE_STDIO_H
 #define _SIMPLE_STDIO_H
 
+typedef unsigned int size_t;
+
 void chomp(char *s); // Remove tailing whitespace/newline
 
 void flush(); // Flush stdout (wait until all bytes are sent)
@@ -43,6 +45,7 @@ int puts(char *s);
 
 int printf(char *f, ...);
 
+int snprintf(char *s, size_t n, char *f, ...);
 int sprintf(char *s, char *f, ...);
 int sscanf(char *s, char *f, ...);
 

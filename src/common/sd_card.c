@@ -188,8 +188,14 @@ int sd_load_parts()
     return -1;
     
   if ((buf[510] != 0x55) || (buf[511] != 0xAA))
-    return -2;
-
+  {
+    // Assume pimage "A2" section starts at offset 0 when no MBR
+    sd_parts_list.p[0].type = 0xA2;
+    sd_parts_list.p[0].start = 0;
+    sd_parts_list.p[0].size = (1024 * 1024 * 1024);
+    return 0;
+  }
+  
   for (x = 0; x < 4; x++)
   {
     sd_parts_list.p[x].type = buf[y + 4];

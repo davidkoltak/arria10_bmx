@@ -472,6 +472,14 @@ int va_sprintf(char *s, char *f, va_list args)
   return rtn;
 }
 
+int snprintf(char *s, size_t n, char *f, ...)
+{
+  va_list args;
+  va_start(args, f);
+  
+  return va_sprintf(s, f, args);  
+}
+
 int sprintf(char *s, char *f, ...)
 {
   va_list args;
@@ -707,3 +715,4 @@ int sscanf(char *s, char *f, ...)
   
   return rtn;
 }
+

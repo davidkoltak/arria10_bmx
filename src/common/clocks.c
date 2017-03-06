@@ -108,6 +108,7 @@ struct {char* name; uint32_t *setting;} clock_setting_names[] =
   {"perpll.gpiodiv_gpiodbclk", &(clock_config.perpll.gpiodiv_gpiodbclk)},
    
   {"alteragrp.nocclk", &(clock_config.alteragrp.nocclk)},
+  {"alteragrp.mpuclk", &(clock_config.alteragrp.mpuclk)},
   
   {"clk_freq_of_eosc1", &(clock_src_clks.clk_freq_of_eosc1)},
   {"clk_freq_of_f2h_free", &(clock_src_clks.clk_freq_of_f2h_free)},
