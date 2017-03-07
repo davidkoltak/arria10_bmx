@@ -100,18 +100,22 @@ int terminal_mkarg(char* line, char** argv, int max)
   char *sptr;
   int argc;
   
-  if ((line == (char*)0) || (argv == (char**)0))
-    return 0;
-  
   sptr = line;
   argc = 0;
+  
+  if ((line == (char*)0) || (argv == (char**)0))
+    return 0;
   
   while (*sptr != '\0')
   {
     // Find the start of a word
     while (*sptr <= ' ')
+    {
+      if (*sptr == '\0')
+        return argc;
       sptr++;
-  
+    }
+    
     argv[argc++] = sptr;
     
     // Find the end of a word
@@ -153,31 +157,29 @@ void terminal()
     safe_gets(buf, 256);
     argc = terminal_mkarg(buf, argv, 16);
     
-    if (argc == 0)
-      continue;
-    
-    if (strcmp(argv[0], "exit") == 0)
-      break;
-    else if (strcmp(argv[0], "restart") == 0)
-      _startup();
-
-    cmd = terminal_cmds;
-    while (cmd->name != (char*)0)
+    if (argc != 0)
     {
-      if (strcmp(argv[0], cmd->name) == 0)
+      if (strcmp(argv[0], "exit") == 0)
         break;
-      
-      cmd++;
-    }
+      else if (strcmp(argv[0], "restart") == 0)
+        _startup();
 
-    if (cmd->name == (char*)0)
-    {
-      printf("ERROR: Invalid command '%s' - try 'help'\n>> ", argv[0]);
-      continue;
+      cmd = terminal_cmds;
+      while (cmd->name != (char*)0)
+      {
+        if (strcmp(argv[0], cmd->name) == 0)
+          break;
+
+        cmd++;
+      }
+
+      if (cmd->name == (char*)0)
+        printf("ERROR: Invalid command '%s' - try 'help'\n", argv[0]);
+      else
+        rtn = cmd->entry(argc, argv);
     }
     
-    rtn = cmd->entry(argc, argv);
-    printf("\n>> ");
+    printf(">> ");
   }
   
   return;
