@@ -36,16 +36,6 @@ SOFTWARE.
 #define I2C_DEVICE ALT_I2C_I2C1
 #define I2C_SPEED 40000
 
-void i2c_init(int step);
-
-BOOT_STEP(301, i2c_init, "init i2c bus");
-
-int i2c_receive(int argc, char** argv);
-int i2c_transmit(int argc, char** argv);
-
-TERMINAL_COMMAND("i2c-rx", i2c_receive, "{chip} {count}");
-TERMINAL_COMMAND("i2c-tx", i2c_transmit, "{chip} {byte} ...");
-
 ALT_I2C_DEV_t i2c_dev;
 
 void i2c_init(int step)
@@ -232,4 +222,10 @@ int i2c_transmit(int argc, char** argv)
   
   return 0;
 }
+
+
+BOOT_STEP(301, i2c_init, "init i2c bus");
+
+TERMINAL_COMMAND("i2c-rx", i2c_receive, "{chip} {count}");
+TERMINAL_COMMAND("i2c-tx", i2c_transmit, "{chip} {byte} ...");
 

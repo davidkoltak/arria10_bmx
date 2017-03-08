@@ -101,5 +101,4 @@ SECTIONS
     stack_abt_block = .;
   }
   _stack_end = .;
-
 }

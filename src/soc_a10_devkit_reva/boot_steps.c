@@ -31,16 +31,6 @@ SOFTWARE.
 #include "simple_stdio.h"
 #include "boot.h"
 
-void clock_init(int step);
-void pinmux_init(int step);
-void stdio_init(int step);
-void print_name(int step);
-
-BOOT_STEP(20, clock_init, "configure clocks");
-BOOT_STEP(30, pinmux_init, "configure pinmux");
-BOOT_STEP(40, stdio_init, "init stdio");
-BOOT_STEP(50, print_name, "display board identifier");
-
 extern ALT_16550_HANDLE_t _stdio_uart_handle;
 
 void stdio_init(int step)
@@ -172,3 +162,10 @@ void pinmux_init(int step)
   
   return;
 }
+
+
+BOOT_STEP(20, clock_init, "configure clocks");
+BOOT_STEP(30, pinmux_init, "configure pinmux");
+BOOT_STEP(40, stdio_init, "init stdio");
+BOOT_STEP(50, print_name, "display board identifier");
+

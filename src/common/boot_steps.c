@@ -32,39 +32,8 @@ SOFTWARE.
 #include "alt_interrupt.h"
 #include "boot.h"
 
-void wdog_stop(int step);
-void icache_enable(int step);
-void disable_fw(int step);
-
-void int_global_init(int step);
-void int_cpu_init(int step);
-void int_global_enable_all(int step);
-void int_cpu_enable(int step);
-
-void int_cpu_disable(int step);
-void int_global_disable_all(int step);
-void int_cpu_uninit(int step);
-void int_global_uninit(int step);
-
-BOOT_STEP(100, wdog_stop, "stop watchdog");
-BOOT_STEP(110, icache_enable, "enable L1 instruction cache");
-BOOT_STEP(115, disable_fw, "disable noc firewalls");
-
-BOOT_STEP(120, int_global_init, "init global interrupt");
-BOOT_STEP(130, int_cpu_init, "init cpu interrupt");
-BOOT_STEP(140, int_global_enable_all, "enable global interrupts");
-BOOT_STEP(150, int_cpu_enable, "enable cpu interrupts");
-
-BOOT_STEP(1850, int_cpu_disable, "disable cpu interrupts");
-BOOT_STEP(1860, int_global_disable_all, "disable global interrupts");
-BOOT_STEP(1870, int_cpu_uninit, "uninit cpu interrupt");
-BOOT_STEP(1880, int_global_uninit, "uninit global interrupt");
-
 void wdog_stop(int step)
 { alt_wdog_stop(ALT_WDOG0); }
-
-void icache_enable(int step)
-{ alt_cache_l1_instruction_enable(); }
 
 #define WRITE_REG32(ADDR, VAL) *((volatile unsigned int*) ADDR) = VAL
 
@@ -206,3 +175,16 @@ void int_cpu_uninit(int step)
 void int_global_uninit(int step)
 { alt_int_global_uninit(); }
 
+
+BOOT_STEP(100, wdog_stop, "stop watchdog");
+BOOT_STEP(115, disable_fw, "disable noc firewalls");
+
+BOOT_STEP(120, int_global_init, "init global interrupt");
+BOOT_STEP(130, int_cpu_init, "init cpu interrupt");
+BOOT_STEP(140, int_global_enable_all, "enable global interrupts");
+BOOT_STEP(150, int_cpu_enable, "enable cpu interrupts");
+
+BOOT_STEP(1850, int_cpu_disable, "disable cpu interrupts");
+BOOT_STEP(1860, int_global_disable_all, "disable global interrupts");
+BOOT_STEP(1870, int_cpu_uninit, "uninit cpu interrupt");
+BOOT_STEP(1880, int_global_uninit, "uninit global interrupt");

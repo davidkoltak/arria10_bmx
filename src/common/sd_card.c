@@ -33,22 +33,6 @@ SOFTWARE.
 #include "simple_stdio.h"
 #include <string.h>
 
-void sd_card_init(int step);
-void sd_card_default_rbf(int step);
-
-BOOT_STEP(300, sd_card_init, "init sdmmc card");
-BOOT_STEP(301, sd_card_default_rbf, "load 'default.rbf' from sdmmc card");
-
-int sd_parts(int argc, char** argv);
-int sd_files(int argc, char** argv);
-int sd_dump(int argc, char** argv);
-int sd_rbf(int argc, char** argv);
-
-TERMINAL_COMMAND("sd-parts", sd_parts, "Show SD Card Partitons");
-TERMINAL_COMMAND("sd-files", sd_files, "Show SD Card Files appended to PImage in A2 Partition");
-TERMINAL_COMMAND("sd-dump", sd_dump, "{sector bytes | filename}");
-TERMINAL_COMMAND("sd-rbf", sd_rbf, "{filename}");
-
 //
 // Card Initialization Boot Step
 //
@@ -128,7 +112,7 @@ void sd_card_init(int step)
   { status = alt_sdmmc_card_clk_div_set(0x00000004); } // (200MHz SDMMC CLK) / 4 = 50 MHz / 8 = 6 MHz (Class 4 card or better)
   
   if (sd_card_block_size != 512)
-  { printf("WARNING: SD Card with blocksize %i is not supported - yet", sd_card_block_size); }
+  { printf("WARNING: SD Card with blocksize %i is not supported - yet\n", sd_card_block_size); }
   
   if (status != ALT_E_SUCCESS)
   { puts("ERROR: SD Card Init FAILED"); }
@@ -515,4 +499,13 @@ int sd_rbf(int argc, char** argv)
     
   return 0;
 }
+
+
+BOOT_STEP(300, sd_card_init, "init sdmmc card");
+BOOT_STEP(301, sd_card_default_rbf, "load 'default.rbf' from sdmmc card");
+
+TERMINAL_COMMAND("sd-parts", sd_parts, "Show SD Card Partitons");
+TERMINAL_COMMAND("sd-files", sd_files, "Show SD Card Files appended to PImage in A2 Partition");
+TERMINAL_COMMAND("sd-dump", sd_dump, "{sector bytes | filename}");
+TERMINAL_COMMAND("sd-rbf", sd_rbf, "{filename}");
 

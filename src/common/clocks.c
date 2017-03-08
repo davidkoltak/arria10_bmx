@@ -37,14 +37,6 @@ __attribute__((weak)) void stdio_init(int step)  // NOTE: Required to ensure bau
                                                  //       rate change. This is a weak
                                                  //       function just in case.
 
-int clock_get(int argc, char** argv);
-int clock_ctrl(int argc, char** argv);
-int clock_setting(int argc, char** argv);
-
-TERMINAL_COMMAND("clock-get", clock_get, "{clock|all}");
-TERMINAL_COMMAND("clock-ctrl", clock_ctrl, "{enable|disable} {clock}");
-TERMINAL_COMMAND("clock-setting", clock_setting, "{list | setting value | commit}");
-
 //
 // Initialize Clocks
 //
@@ -276,3 +268,9 @@ int clock_setting(int argc, char** argv)
   
   return -1;
 }
+
+
+TERMINAL_COMMAND("clock-get", clock_get, "{clock|all}");
+TERMINAL_COMMAND("clock-ctrl", clock_ctrl, "{enable|disable} {clock}");
+TERMINAL_COMMAND("clock-setting", clock_setting, "{list | setting value | commit}");
+

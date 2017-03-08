@@ -32,20 +32,6 @@ SOFTWARE.
 #include "terminal.h"
 #include "boot.h"
 
-int terminal_help(int argc, char** argv);
-int terminal_read(int argc, char** argv);
-int terminal_dump(int argc, char** argv);
-int terminal_write(int argc, char** argv);
-int terminal_boot_steps(int argc, char** argv);
-int terminal_mem_usage(int argc, char** argv);
-
-TERMINAL_COMMAND("help", terminal_help, "[command]");
-TERMINAL_COMMAND("read", terminal_read, "{b|h|w} {address}");
-TERMINAL_COMMAND("dump", terminal_dump, "{b|h|w} {address count}");
-TERMINAL_COMMAND("write", terminal_write, "{b|h|w} {address data} [data ...]");
-TERMINAL_COMMAND("boot-steps", terminal_boot_steps, "Show boot steps in sequence order");
-TERMINAL_COMMAND("memory-usage", terminal_mem_usage, "Show memory usage");
-
 int terminal_help(int argc, char** argv)
 {
   terminal_cmd_t *cmd;
@@ -308,7 +294,7 @@ int terminal_write(int argc, char** argv)
       __asm("nop;\n");
 
       if (abt_data_old != _abort_data_count)
-        printf(" %08X = ??\n", addr, (data & 0xFF));  
+        printf(" %08X = ??\n", addr);  
       else
         printf(" %08X = %02X\n", addr, (data & 0xFF));
       
@@ -321,7 +307,7 @@ int terminal_write(int argc, char** argv)
       __asm("nop;\n");
 
       if (abt_data_old != _abort_data_count)
-        printf(" %08X = ????\n", addr, (data & 0xFF));  
+        printf(" %08X = ????\n", addr);  
       else
         printf(" %08X = %04X\n", addr, (data & 0xFFFF));
       
@@ -333,8 +319,8 @@ int terminal_write(int argc, char** argv)
       *((unsigned int*)addr) = data;
       __asm("nop;\n");
 
-      if (abt_data_old = _abort_data_count)
-        printf(" %08X = ????????\n", addr, (data & 0xFF));  
+      if (abt_data_old != _abort_data_count)
+        printf(" %08X = ????????\n", addr);  
       else
         printf(" %08X = %08X\n", addr, data);
       
@@ -452,3 +438,12 @@ int terminal_mem_usage(int argc, char** argv)
   
   return 0;
 }
+
+
+TERMINAL_COMMAND("help", terminal_help, "[command]");
+TERMINAL_COMMAND("read", terminal_read, "{b|h|w} {address}");
+TERMINAL_COMMAND("dump", terminal_dump, "{b|h|w} {address count}");
+TERMINAL_COMMAND("write", terminal_write, "{b|h|w} {address data} [data ...]");
+TERMINAL_COMMAND("boot-steps", terminal_boot_steps, "Show boot steps in sequence order");
+TERMINAL_COMMAND("memory-usage", terminal_mem_usage, "Show memory usage");
+
