@@ -48,7 +48,6 @@ void sd_card_init(int step)
 
   // Setting up SD/MMC
   
-  puts("\nINFO: Setting up SDMMC");
   status = alt_sdmmc_init();
 
   if (status == ALT_E_SUCCESS)
@@ -62,19 +61,10 @@ void sd_card_init(int step)
     switch(sd_card_info.card_type)
     {
     case ALT_SDMMC_CARD_TYPE_MMC:
-      puts("INFO: MMC Card detected");
-      break;
     case ALT_SDMMC_CARD_TYPE_SD:
-      puts("INFO: SD Card detected");
-      break;
     case ALT_SDMMC_CARD_TYPE_SDIOIO:
-      puts("INFO: SDIO Card detected");
-      break;
     case ALT_SDMMC_CARD_TYPE_SDIOCOMBO:
-      puts("INFO: SDIOCOMBO Card detected");
-      break;
     case ALT_SDMMC_CARD_TYPE_SDHC:
-      puts("INFO: SDHC Card detected");
       break;
     default:
       puts("INFO: Card type unknown");
@@ -97,12 +87,9 @@ void sd_card_init(int step)
 
   if (status == ALT_E_SUCCESS)
   {
-    printf("INFO: Card width = %d\n", sd_card_misc_cfg.card_width);
-    printf("INFO: Card block size = %d\n", (int)sd_card_misc_cfg.block_size);
     sd_card_block_size = sd_card_misc_cfg.block_size;
     sd_card_size = (sd_card_info.blk_number_low >> 10) + (sd_card_info.blk_number_high << 22);
     sd_card_size *= sd_card_block_size;
-    printf("INFO: Card size = %d MB\n", (sd_card_size >> 10));
   }
 
   if (status == ALT_E_SUCCESS)
@@ -116,8 +103,6 @@ void sd_card_init(int step)
   
   if (status != ALT_E_SUCCESS)
   { puts("ERROR: SD Card Init FAILED"); }
-  else
-  { puts("INFO: SD Card Init SUCCESS"); }
   
   return;
 }
@@ -128,16 +113,11 @@ void sd_card_default_rbf(int step)
 {
   int rtn;
   
-  puts("INFO: Loading 'default.rbf'");
-  flush();
-  
   rtn = sd_load_rbf("default.rbf");
   
-  if (rtn == 0)
-    puts("   SUCCESS");
-  else if (rtn == -1)
-    puts("ERROR: File not found");
-  else
+  if (rtn == -1)
+    puts("ERROR: File 'default.rbf' not found");
+  else if (rtn != 0)
     printf("ERROR: Error Code (%i)\n", rtn);
 }
 

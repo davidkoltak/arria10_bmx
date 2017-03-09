@@ -44,7 +44,6 @@ void i2c_init(int step)
   ALT_I2C_MASTER_CONFIG_t cfg;
   uint32_t speed;
     
-  puts("\nINFO: Setting up I2C Bus");
   status = alt_i2c_init(I2C_DEVICE, &i2c_dev);
 
   if (status == ALT_E_SUCCESS)
@@ -69,8 +68,6 @@ void i2c_init(int step)
 
   if (status != ALT_E_SUCCESS)
   { puts("ERROR: I2C Init FAILED"); }
-  else
-  { puts("INFO: I2C Init SUCCESS"); }
   
   return;
 }
@@ -224,7 +221,7 @@ int i2c_transmit(int argc, char** argv)
 }
 
 
-BOOT_STEP(301, i2c_init, "init i2c bus");
+BOOT_STEP(310, i2c_init, "init i2c bus");
 
 TERMINAL_COMMAND("i2c-rx", i2c_receive, "{chip} {count}");
 TERMINAL_COMMAND("i2c-tx", i2c_transmit, "{chip} {byte} ...");
