@@ -58,6 +58,8 @@ int terminal_help(int argc, char** argv)
 
 extern volatile int _abort_data_count; // incremented every time a data abort is triggered
 
+__attribute__((noinline)) void terminal_pause() { __asm("nop;\nnop;\nnop;\n"); }
+
 int terminal_read(int argc, char** argv)
 {
   unsigned int addr;
@@ -83,7 +85,7 @@ int terminal_read(int argc, char** argv)
   if (strcmp(argv[1], "b") == 0)
   {
     as_byte = *((char*)addr);
-    __asm("nop;\n");
+    terminal_pause();
     
     if (abt_data_old != _abort_data_count)
       printf(" %08X = ??\n", addr);
@@ -94,7 +96,7 @@ int terminal_read(int argc, char** argv)
   {
     addr &= 0xFFFFFFFE;
     as_half = *((short*)addr);
-    __asm("nop;\n");
+    terminal_pause();
     
     if (abt_data_old != _abort_data_count)
       printf(" %08X = ????\n", addr);
@@ -105,7 +107,7 @@ int terminal_read(int argc, char** argv)
   {
     addr &= 0xFFFFFFFC;
     as_word = *((int*)addr);
-    __asm("nop;\n");
+    terminal_pause();
     
     if (abt_data_old != _abort_data_count)
       printf(" %08X = ????????\n", addr);
@@ -165,7 +167,7 @@ int terminal_dump(int argc, char** argv)
     {
       abt_data_old = _abort_data_count;
       as_byte = *((char*)addr);
-      __asm("nop;\n");
+      terminal_pause();
       
       if (abt_data_old != _abort_data_count)
         printf(" ??");
@@ -209,7 +211,7 @@ int terminal_dump(int argc, char** argv)
     {
       abt_data_old = _abort_data_count;
       as_half = *((short*)addr);
-      __asm("nop;\n");
+      terminal_pause();
       
       if (abt_data_old != _abort_data_count)
         printf(" ????");
@@ -235,7 +237,7 @@ int terminal_dump(int argc, char** argv)
     {
       abt_data_old = _abort_data_count;
       as_word = *((int*)addr);
-      __asm("nop;\n");
+      terminal_pause();
       
       if (abt_data_old != _abort_data_count)
         printf(" ????????");
@@ -291,7 +293,7 @@ int terminal_write(int argc, char** argv)
     if (strcmp(argv[1], "b") == 0)
     {
       *((unsigned char*)addr) = (unsigned char) (data & 0xFF);
-      __asm("nop;\n");
+      terminal_pause();
 
       if (abt_data_old != _abort_data_count)
         printf(" %08X = ??\n", addr);  
@@ -304,7 +306,7 @@ int terminal_write(int argc, char** argv)
     {
       addr &= 0xFFFFFFFE;
       *((unsigned short*)addr) = (unsigned short) (data & 0xFFFF);
-      __asm("nop;\n");
+      terminal_pause();
 
       if (abt_data_old != _abort_data_count)
         printf(" %08X = ????\n", addr);  
@@ -317,7 +319,7 @@ int terminal_write(int argc, char** argv)
     {
       addr &= 0xFFFFFFFC;
       *((unsigned int*)addr) = data;
-      __asm("nop;\n");
+      terminal_pause();
 
       if (abt_data_old != _abort_data_count)
         printf(" %08X = ????????\n", addr);  

@@ -101,4 +101,6 @@ SECTIONS
     stack_abt_block = .;
   }
   _stack_end = .;
+  
+  /* NOTE: If caches are enabled, MMU uses last 16kB of OCRAM for MMU Table */
 }
