@@ -176,8 +176,8 @@ void int_global_uninit(int step)
 { alt_int_global_uninit(); }
 
 
+BOOT_STEP(10, disable_fw, "disable noc firewalls");
 BOOT_STEP(100, wdog_stop, "stop watchdog");
-BOOT_STEP(115, disable_fw, "disable noc firewalls");
 
 BOOT_STEP(120, int_global_init, "init global interrupt");
 BOOT_STEP(130, int_cpu_init, "init cpu interrupt");

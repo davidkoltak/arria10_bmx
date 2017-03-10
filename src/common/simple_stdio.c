@@ -226,8 +226,14 @@ int puts(char *s)
   
     if (*ptr == '\0')
       break;
+      
+    if (*ptr == '\n')
+      alt_16550_fifo_write(&_stdio_uart_handle, "\r", 1);
     
     alt_16550_fifo_write(&_stdio_uart_handle, ptr, 1);
+      
+    if (*ptr == '\r')
+      alt_16550_fifo_write(&_stdio_uart_handle, "\n", 1);
       
     level++;
     ptr++;

@@ -94,7 +94,8 @@ static ALT_STATUS_CODE mmu_init(void)
 
     ALT_STATUS_CODE status = ALT_E_SUCCESS;
     uint32_t * ttb1 = NULL;
-
+    int num_regions = (sizeof(regions) / sizeof(ALT_MMU_MEM_REGION_t));
+    
     if (status == ALT_E_SUCCESS)
     {
         status = alt_mmu_init();
@@ -102,7 +103,7 @@ static ALT_STATUS_CODE mmu_init(void)
 
     if (status == ALT_E_SUCCESS)
     {
-        size_t reqsize = alt_mmu_va_space_storage_required(regions, 4);
+        size_t reqsize = alt_mmu_va_space_storage_required(regions, num_regions);
         mmu_table = (void*) (0xFFE40000 - reqsize); // NOTE: Reclaim end of OCRAM, was reserved by bootrom
         if ((int)mmu_table <= ((int) &_stack_end))
           status = ALT_E_ERROR;
@@ -110,7 +111,7 @@ static ALT_STATUS_CODE mmu_init(void)
 
     if (status == ALT_E_SUCCESS)
     {
-        status = alt_mmu_va_space_create(&ttb1, regions, 4, page_table_alloc, mmu_table);
+        status = alt_mmu_va_space_create(&ttb1, regions, num_regions, page_table_alloc, mmu_table);
     }
 
     if (status == ALT_E_SUCCESS)
