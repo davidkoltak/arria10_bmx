@@ -92,8 +92,8 @@ void sd_card_init(int step)
     sd_card_size *= sd_card_block_size;
   }
 
-  if (status == ALT_E_SUCCESS)
-  { status = alt_sdmmc_dma_enable(); }
+  //if (status == ALT_E_SUCCESS)
+  //{ status = alt_sdmmc_dma_enable(); }
 
   if (status == ALT_E_SUCCESS)
   { status = alt_sdmmc_card_clk_div_set(0x00000004); } // (200MHz SDMMC CLK) / 4 = 50 MHz / 8 = 6 MHz (Class 4 card or better)
@@ -118,7 +118,7 @@ void sd_card_default_rbf(int step)
   if (rtn == -1)
     puts("ERROR: File 'default.rbf' not found");
   else if (rtn != 0)
-    printf("ERROR: Error Code (%i)\n", rtn);
+    printf("ERROR: Load RBF Error Code (%i)\n", rtn);
 }
 
 //
@@ -144,7 +144,11 @@ int sd_load_parts()
   char buf[512];
 
   for (x = 0; x < 4; x++)
+  {
     sd_parts_list.p[x].type = 0;
+    sd_parts_list.p[x].start = 0;
+    sd_parts_list.p[x].size = 0;
+  }
     
   status = alt_sdmmc_read(&sd_card_info, &buf, (void*)0, 512); // MBR
   
@@ -153,7 +157,7 @@ int sd_load_parts()
     
   if ((buf[510] != 0x55) || (buf[511] != 0xAA))
   {
-    // Assume pimage "A2" section starts at offset 0 when no MBR
+    printf("WARNING: No MBR Found: Assuming pimage section starts at offset 0\n");
     sd_parts_list.p[0].type = 0xA2;
     sd_parts_list.p[0].start = 0;
     sd_parts_list.p[0].size = (1024 * 1024 * 1024);
@@ -355,7 +359,7 @@ int sd_files(int argc, char** argv)
       {
         if ((buf[0] == '>') && (buf[1] == ' ') && (buf[511] == '\0'))
         {
-          printf("\n%s", buf);
+          printf("\n%s\n", buf);
           return 0;
         }
       }
