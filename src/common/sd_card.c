@@ -107,13 +107,13 @@ void sd_card_init(int step)
   return;
 }
 
-int sd_load_rbf(char *filename);
+int sd_load_rbf(char *filename, int compressed);
 
 void sd_card_default_rbf(int step)
 {
   int rtn;
   
-  rtn = sd_load_rbf("default.rbf");
+  rtn = sd_load_rbf("default.rbf", 0); // Note: default.rbf must be uncompressed
   
   if (rtn == -1)
     puts("ERROR: File 'default.rbf' not found");
@@ -244,7 +244,7 @@ int sd_find_file(char *filename, int *sector, int *bytes)
   return -1;
 }
 
-int sd_load_rbf(char *filename)
+int sd_load_rbf(char *filename, int compressed)
 {
   ALT_STATUS_CODE status;
   int sector;
@@ -264,7 +264,11 @@ int sd_load_rbf(char *filename)
 
   *fpgamgr_ctrl_0 = 0x00000106;
   *fpgamgr_ctrl_1 = 0x00000000;
-  *fpgamgr_ctrl_2 = 0x01030001;
+  
+  if (compressed)
+    *fpgamgr_ctrl_2 = 0x01030001; // For Compressed RBFs
+  else
+    *fpgamgr_ctrl_2 = 0x01000001; // For Uncompressed RBFs
   
   *fpgamgr_ctrl_0 = 0x00000006;
   while ((*fpgamgr_stat & 0x0000000E) != 0) ;
@@ -273,12 +277,11 @@ int sd_load_rbf(char *filename)
   
   while (bytes > 0)
   {
-  
     status = alt_sdmmc_read(&sd_card_info, (char*)buf, (void*)(sector * 512), (4 * 1024));
-    
+
     if (status != ALT_E_SUCCESS)
       return -2;
-      
+
     sector += 8;
     
     level = *fpgamgr_fsta & 0xFF;
@@ -464,17 +467,26 @@ int sd_dump(int argc, char** argv)
 int sd_rbf(int argc, char** argv)
 {
   int rtn;
+  int compressed = 0;
   
-  if (argc != 2)
+  if (argc != 3)
   {
     puts("ERROR: Wrong number of arguments");
     return -2;
   }
 
+  if (strcmp(argv[2], "compressed") == 0)
+    compressed = 1;
+  else if (strcmp(argv[2], "uncompressed"))
+  {
+    printf("ERROR: Bad 'un/compressed' argument\n");
+    return -1;
+  }
+  
   puts("Loading file...\n");
   flush();
   
-  rtn = sd_load_rbf(argv[1]);
+  rtn = sd_load_rbf(argv[1], compressed);
 
   if (rtn == 0)
     puts("   SUCCESS");
@@ -486,10 +498,10 @@ int sd_rbf(int argc, char** argv)
 
 
 BOOT_STEP(300, sd_card_init, "init sdmmc card");
-BOOT_STEP(301, sd_card_default_rbf, "load 'default.rbf' from sdmmc card");
+BOOT_STEP(301, sd_card_default_rbf, "load uncompressed 'default.rbf' from sdmmc card");
 
 TERMINAL_COMMAND("sd-parts", sd_parts, "Show SD Card Partitons");
 TERMINAL_COMMAND("sd-files", sd_files, "Show SD Card Files appended to PImage in A2 Partition");
 TERMINAL_COMMAND("sd-dump", sd_dump, "{sector bytes | filename}");
-TERMINAL_COMMAND("sd-rbf", sd_rbf, "{filename}");
+TERMINAL_COMMAND("sd-rbf", sd_rbf, "{filename} {compressed|uncompressed}");
 
